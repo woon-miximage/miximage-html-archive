@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>STREET • RIDE • DRIFT — Prompt Pack (GPT Image)</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Prompt:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0d0d10;--card:#17171c;--line:#2a2a33;--txt:#ececf1;--mut:#9a9aa8;--pink:#ff2e88;--cyan:#00e5ff;--yel:#ffd60a;--org:#ff7a00;--grn:#39ff88}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Prompt',sans-serif;background:var(--bg);color:var(--txt);line-height:1.6;
+background-image:radial-gradient(circle at 10% 0%,rgba(255,46,136,.15),transparent 40%),radial-gradient(circle at 90% 10%,rgba(0,229,255,.12),transparent 40%)}
+header{padding:48px 20px 24px;text-align:center}
+h1{font-family:'Bebas Neue',sans-serif;font-size:clamp(42px,8vw,84px);letter-spacing:3px;line-height:1;
+background:linear-gradient(90deg,var(--pink),var(--yel),var(--cyan));-webkit-background-clip:text;background-clip:text;color:transparent}
+.sub{color:var(--mut);margin-top:8px}
+.wrap{max-width:1280px;margin:0 auto;padding:0 18px 60px}
+.guide{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px 22px;margin-bottom:22px}
+.guide h3{font-size:16px;margin-bottom:8px;color:var(--yel)}
+.guide ol{padding-left:20px;color:#cfcfda;font-size:14px}
+.bar{position:sticky;top:0;z-index:10;background:rgba(13,13,16,.92);backdrop-filter:blur(10px);padding:12px 0;border-bottom:1px solid var(--line);margin-bottom:20px}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:8px}
+.row span.l{font-size:13px;color:var(--mut);min-width:64px}
+.chip{border:1px solid var(--line);background:#1d1d24;color:var(--txt);padding:6px 14px;border-radius:999px;cursor:pointer;font-family:inherit;font-size:13px;transition:.2s}
+.chip:hover{border-color:var(--cyan)}
+.chip.on{background:var(--pink);border-color:var(--pink);color:#fff}
+#q{flex:1;min-width:200px;background:#1d1d24;border:1px solid var(--line);color:var(--txt);padding:8px 14px;border-radius:10px;font-family:inherit}
+#count{font-size:13px;color:var(--mut)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:18px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:10px;position:relative;overflow:hidden}
+.card::before{content:"";position:absolute;left:0;top:0;right:0;height:4px;background:var(--c)}
+.card.g{--c:linear-gradient(90deg,var(--pink),var(--yel))}
+.card.h{--c:linear-gradient(90deg,var(--org),#c0392b)}
+.card.d{--c:linear-gradient(90deg,var(--cyan),var(--grn))}
+.top{display:flex;justify-content:space-between;align-items:center}
+.id{font-family:'Bebas Neue';font-size:26px;letter-spacing:1px;color:var(--yel)}
+.tags{display:flex;gap:6px;flex-wrap:wrap}
+.tag{font-size:11px;padding:2px 9px;border-radius:6px;background:#24242d;color:#cfcfda}
+.tag.cp{background:rgba(255,46,136,.18);color:#ff8fbf}
+.title{font-weight:600;font-size:16px}
+.mood{font-size:13px;color:var(--mut)}
+pre{white-space:pre-wrap;word-break:break-word;font-family:ui-monospace,Consolas,monospace;font-size:12px;color:#c9c9d6;background:#0f0f13;border:1px solid var(--line);border-radius:10px;padding:12px;max-height:170px;overflow:auto}
+.btn{margin-top:auto;border:0;cursor:pointer;font-family:inherit;font-weight:600;font-size:14px;padding:11px;border-radius:10px;color:#111;background:linear-gradient(90deg,var(--yel),var(--org));transition:.2s}
+.btn:hover{filter:brightness(1.1);transform:translateY(-1px)}
+.btn.ok{background:var(--grn)}
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--grn);color:#111;padding:10px 22px;border-radius:999px;font-weight:600;transition:.3s;z-index:99}
+#toast.show{transform:translateX(-50%) translateY(0)}
+footer{text-align:center;color:var(--mut);font-size:12px;padding:20px}
+</style>
+</head>
+<body>
+<header>
+  <h1>STREET • RIDE • DRIFT</h1>
+  <p class="sub">ชุดพรอมต์สำหรับ GPT Image — กราฟฟิตี้ Street Art • Harley-Davidson • นักแข่งดริฟท์</p>
+</header>
+
+<div class="wrap">
+  <div class="guide">
+    <h3>วิธีใช้งาน</h3>
+    <ol>
+      <li><b>ภาพเดี่ยว:</b> แนบรูปหน้าตรง ชัด แสงดี 1 รูป (ชายหรือหญิงก็ได้) แล้ววางพรอมต์</li>
+      <li><b>ภาพคู่:</b> แนบ 2 รูป รูปผู้หญิง 1 รูป และรูปผู้ชาย 1 รูป แล้ววางพรอมต์</li>
+      <li>กดปุ่ม <b>คัดลอกพรอมต์</b> แล้ววางในแชท GPT ได้ทันที ไม่ต้องแก้</li>
+      <li>ถ้าหน้ายังไม่เหมือน ให้พิมพ์ต่อ: <i>"Make the face match the reference photo more closely"</i></li>
+    </ol>
+  </div>
+
+  <div class="bar">
+    <div class="row"><span class="l">ประเภท</span>
+      <button class="chip on" data-f="type" data-v="all">ทั้งหมด</button>
+      <button class="chip" data-f="type" data-v="s">ภาพเดี่ยว (40)</button>
+      <button class="chip" data-f="type" data-v="c">ภาพคู่รัก (20)</button>
+    </div>
+    <div class="row"><span class="l">หมวด</span>
+      <button class="chip on" data-f="cat" data-v="all">ทั้งหมด</button>
+      <button class="chip" data-f="cat" data-v="g">กราฟฟิตี้ Street Art</button>
+      <button class="chip" data-f="cat" data-v="h">Harley-Davidson</button>
+      <button class="chip" data-f="cat" data-v="d">นักแข่งดริฟท์</button>
+    </div>
+    <div class="row"><span class="l">แนวภาพ</span>
+      <button class="chip on" data-f="ratio" data-v="all">ทั้งหมด</button>
+      <button class="chip" data-f="ratio" data-v="v">แนวตั้ง 2:3</button>
+      <button class="chip" data-f="ratio" data-v="h">แนวนอน 3:2</button>
+      <input id="q" placeholder="ค้นหา เช่น GT-R, ฝน, นีออน, Fat Boy...">
+      <span id="count"></span>
+    </div>
+  </div>
+
+  <div class="grid" id="grid"></div>
+</div>
+<div id="toast">คัดลอกแล้ว ✓</div>
+<footer>STREET • RIDE • DRIFT Prompt Pack — 60 Prompts</footer>
+
+<script>
+// [id, cat(g/h/d), type(s/c), ratio(v/h), titleTH, moodTH, scene, outfit, expression]
+const D=[
+// ===== SINGLE — GRAFFITI (16) =====
+["S01","g","s","v","ตรอกนีออนยามค่ำ","มั่นใจ เท่","Leaning against a massive wall covered in neon wildstyle graffiti letters in a narrow back alley at night, wet asphalt reflecting pink and cyan light.","Oversized black hoodie, cargo pants, chunky sneakers, silver chain necklace.","Cool confident half-smirk, chin slightly raised, direct eye contact."],
+["S02","g","s","h","ศิลปินพ่นสีบนดาดฟ้า","จดจ่อ มีพลัง","Spray painting a giant colorful mural on a rooftop wall, can in hand, fine paint mist floating in warm golden-hour sunlight.","Paint-splattered denim overalls over a white tee, bandana around the neck, respirator mask hanging loosely.","Focused, intense concentration, eyes on the artwork."],
+["S03","g","s","v","นั่งริมตึกยามเย็น","ฝัน ผ่อนคลาย","Sitting on a graffiti-covered rooftop ledge with the city skyline glowing in a pink-orange sunset behind.","Vintage varsity jacket, ripped jeans, high-top sneakers.","Relaxed, dreamy gaze into the distance, soft hint of a smile."],
+["S04","g","s","h","สถานีใต้ดินร้าง","ลึกลับ จริงจัง","Standing in an abandoned subway station covered floor to ceiling in layered graffiti and tags, flickering fluorescent lights, light haze.","Black techwear jacket with straps and buckles, tactical pants, combat boots.","Serious and mysterious, sharp piercing eyes straight to camera."],
+["S05","g","s","v","หลุดเข้าไปในภาพป๊อปอาร์ต","สนุก ขี้เล่น","Half-blended into a pop-art graffiti mural: comic halftone dots, bold outlines and paint drips flowing from the shoulders into the wall.","Bright yellow puffer jacket, colorful graphic tee.","Playful wide grin, energetic, one eyebrow raised."],
+["S06","g","s","v","ฝนตกข้างกำแพงกราฟฟิตี้","เหงา ครุ่นคิด","Standing in the rain beside a graffiti wall at night, glowing neon sign light, rain streaks and wet hair.","Long black trench coat over a dark hoodie.","Melancholic and thoughtful, eyes slightly lowered."],
+["S07","g","s","h","สนามบาสสตรีท","กวน ท้าทาย","Outdoor basketball court surrounded by giant graffiti murals, holding a basketball on the shoulder, chain-link fence.","Oversized basketball jersey, mesh shorts, headband, retro sneakers.","Cocky competitive grin, confident stance."],
+["S08","g","s","v","สเก็ตพาร์ค","อิสระ หัวเราะ","Inside a graffiti-covered skate park bowl, holding a skateboard, bright afternoon sun.","Open flannel shirt over a graphic tee, beanie, baggy pants.","Carefree genuine laughter."],
+["S09","g","s","h","สเตนซิลขาวดำ","สงบ ลึกลับ","Standing beside a black-and-white stencil artwork of their own silhouette on a gray concrete wall, Banksy-like style, with a single red accent (a red balloon).","Black turtleneck and beige long coat.","Calm, enigmatic, subtle smile."],
+["S10","g","s","v","ควันสีกบฏ","ดุดัน กบฏ","Close-up portrait in front of chrome-and-fire wildstyle letters, pink and orange colored smoke swirling around.","Leather jacket with hand-painted patches.","Fierce rebellious stare, jaw set."],
+["S11","g","s","h","ถนนชัตเตอร์โตเกียว","คูล เรียบเท่","Night street lined with graffiti-painted metal shop shutters and Japanese neon signs.","Streetwear kimono-style jacket, wide-leg pants, minimalist sneakers.","Cool, subtle smile, relaxed posture."],
+["S12","g","s","v","ระเบิดสีสาด","ปลดปล่อย สุขสุด","Colorful paint bombs exploding around in mid-air, vivid splashes and powder against a graffiti wall.","White oversized tee and white pants covered in paint splatter.","Euphoric joyful laughter, eyes closed, head tilted back."],
+["S13","g","s","h","ปาร์ตี้ใต้สะพาน","มันส์ ฮึกเหิม","Under a graffiti-covered highway bridge at night, vintage boombox, blurred street party crowd and string lights.","Retro 90s hip-hop tracksuit, bucket hat, gold chains.","Hyped, mouth open shouting with the music, hand raised."],
+["S14","g","s","h","ลานรถไฟยามอัสดง","คิดถึง อบอุ่น","Walking along an old freight train yard with graffiti-painted train carriages in warm sunset light.","Denim jacket, white tee, worn boots, canvas backpack.","Serene nostalgic soft smile."],
+["S15","g","s","v","ปีกนางฟ้าบนกำแพง","ความหวัง อ่อนโยน","Standing in front of huge angel wings painted on a wall, positioned so the wings appear on their back.","All-white minimalist streetwear outfit.","Gentle hopeful look, soft eyes."],
+["S16","g","s","v","กราฟฟิตี้เรืองแสง UV","สะกดจิต ไซเบอร์","Dark room lit by UV blacklight, fluorescent graffiti glowing on the walls, glowing paint streaks on the cheek.","Reflective silver jacket, black inner layer.","Intense, hypnotic gaze."],
+// ===== SINGLE — HARLEY (12) =====
+["S17","h","s","h","ทางหลวงทะเลทราย","อิสระ","Riding a Harley-Davidson Fat Boy on an empty desert highway at golden hour, motion blur on the road.","Brown leather jacket, aviator sunglasses, jeans, riding boots.","Free-spirited content smile, wind in the hair."],
+["S18","h","s","v","อู่วินเทจ","แกร่ง นิ่ง","Sitting on a black Harley-Davidson Street Bob inside a vintage garage, tools on the wall, neon OPEN sign glow.","Black leather vest over a white tank top, dark jeans, boots.","Tough, steady confident gaze."],
+["S19","h","s","h","ขี่ฝ่าเมืองยามค่ำ","คูล จดจ่อ","Riding a Harley-Davidson Breakout through a neon-lit city street at night, wet road reflections, light trails.","Black leather biker jacket, riding gloves, half helmet.","Focused and cool, eyes on the road."],
+["S20","h","s","v","ปั๊มน้ำมันเรโทร","สบาย ๆ","Leaning against a Harley-Davidson Road King at a retro gas station at dusk, vintage pumps glowing.","Denim jacket with patches, bandana, boots.","Relaxed easygoing half-smile."],
+["S21","h","s","h","ถนนบนภูเขาเหนือเมฆ","สงบ ทึ่ง","Riding a Harley-Davidson Road Glide on a winding mountain road above a sea of clouds at sunrise.","Touring jacket, gloves, open-face helmet.","Peaceful, awe-filled expression."],
+["S22","h","s","v","ยืนกลางพายุฝน","มุ่งมั่น ดิบ","Standing beside a Harley-Davidson Iron 883 in pouring rain at night, headlight beam cutting through the rain.","Soaked leather jacket, black jeans.","Determined gritty stare."],
+["S23","h","s","h","งานรวมพลไบเกอร์","ภูมิใจ","At a big biker rally with rows of Harley-Davidson motorcycles, blurred crowd in the background, sunny day.","Leather vest with patches, black tee, sunglasses pushed up.","Proud wide grin."],
+["S24","h","s","v","ชอปเปอร์ยุค 70","ชิล เท่แบบวินเทจ","1970s film photo look with grain and warm tones, sitting on a Harley chopper with tall ape-hanger handlebars.","Suede fringe jacket, flared jeans, retro tinted sunglasses.","Laid-back cool expression."],
+["S25","h","s","h","ถนนเลียบทะเล","สดใส สุข","Pacific coast highway at sunset, ocean in the background, riding a Harley-Davidson Low Rider ST.","Light linen shirt under an open leather jacket.","Joyful laughter."],
+["S26","h","s","h","เบิร์นเอาท์ควันฟุ้ง","อะดรีนาลีน","Harley-Davidson doing a burnout, thick tire smoke clouds, dramatic backlight.","Black tee, leather gloves, black jeans.","Wild excitement, adrenaline rush."],
+["S27","h","s","v","พอร์เทรตขาวดำ","นิ่ง ทรงพลัง","High-contrast black-and-white cinematic portrait sitting on a Harley-Davidson, dramatic side light.","Classic double rider leather jacket.","Stoic intense look."],
+["S28","h","s","v","ป่าใบไม้เปลี่ยนสี","อบอุ่น พอใจ","Autumn forest road with orange and red leaves, standing next to a Harley-Davidson Sportster.","Waxed cotton jacket, knit scarf, leather boots.","Calm, content warm smile."],
+// ===== SINGLE — DRIFT (12) =====
+["S29","d","s","h","GT-R R35 กลางควันยางคืนแข่ง","มั่นใจ","Standing in front of a matte black Nissan GT-R R35 on a race track at night, thick tire smoke and stadium lights behind.","Black and red racing suit with the top unzipped and tied at the waist, racing gloves.","Confident smirk."],
+["S30","d","s","h","หลังพวงมาลัย R34","จดจ่อสุดขีด","In the driver seat of a drifting Nissan Skyline R34 GT-R, hands gripping the steering wheel, tire smoke visible through the windows.","Racing suit, open-face helmet with visor up.","Intense focus, gritted teeth."],
+["S31","d","s","v","ลานจอดใต้ดินโตเกียว","คูล นิ่ง","Underground parking garage full of JDM cars, leaning on a Bayside Blue Nissan Skyline R34 GT-R, fluorescent lights.","Bomber jacket, backwards cap, cargo pants.","Calm cool expression."],
+["S32","d","s","h","ทางโค้งภูเขายามรุ่ง","มุ่งมั่นเงียบ ๆ","Sitting on the hood of a white-and-black Toyota AE86 at a mountain pass at dawn, misty winding road below.","Hoodie and track pants.","Thoughtful, quiet determination."],
+["S33","d","s","v","โพเดียมแชมป์","ดีใจสุดขีด","On the winners podium holding a trophy with champagne spraying, a GT-R in the background.","Racing suit covered in sponsor patches.","Ecstatic victory shout."],
+["S34","d","s","v","Supra MK4 ในการาจนีออน","ภูมิใจ","Orange Toyota Supra MK4 inside a neon-lit garage, hood open.","Mechanic jumpsuit with sleeves tied at the waist, black tank top.","Proud satisfied look."],
+["S35","d","s","h","RX-7 ท่ามกลางฝน","เท่ ไม่สะทกสะท้าน","Red Mazda RX-7 FD drifting in heavy rain with water spray behind while the person stands nearby holding a black umbrella.","Racing jacket, dark pants.","Cool, unbothered expression."],
+["S36","d","s","h","เดินออกจากควัน","ฮีโร่","Walking out of thick tire smoke at a daytime drift event, holding a helmet, a liveried Nissan Silvia S15 behind.","Full racing suit.","Confident slow-motion hero walk expression."],
+["S37","d","s","v","พอร์เทรตถือหมวกกันน็อก","สายตาเหล็ก","Close-up portrait holding a racing helmet under the arm, track lights and smoke behind.","Racing suit with patches.","Steely determined gaze."],
+["S38","d","s","h","ดริฟท์กลางทะเลทราย","ดิบ แกร่ง","Leaning on a Ford Mustang RTR in the desert, dust storm swirling, warm harsh sunlight.","Utility jacket, sunglasses.","Rugged tough expression."],
+["S39","d","s","h","คาร์มีตติ้งยามค่ำ","เป็นมิตร สนุก","Night JDM car meet with rows of GT-R, Supra and RX-7, colorful neon underglow.","Streetwear jacket and cap.","Friendly relaxed smile."],
+["S40","d","s","v","ช่างในพิท","จดจ่อ พอใจ","In the pit garage working on a GT-R engine, grease on the hands, tools around.","Racing team shirt and work pants.","Focused, satisfied expression."],
+// ===== COUPLE — GRAFFITI (8) =====
+["C01","g","c","v","จูบหน้าผากในตรอกนีออน","อบอุ่น โรแมนติก","In a neon graffiti alley at night, the man gently kisses the woman's forehead.","Woman: oversized leather jacket and mini skirt. Man: black hoodie and cargo pants.","Woman: eyes closed, peaceful smile. Man: tender, loving."],
+["C02","g","c","h","พ่นหัวใจด้วยกัน","สนุก รัก","Spray painting a big heart on a graffiti wall together, colorful paint mist in the air.","Matching paint-splattered denim outfits.","Both laughing joyfully."],
+["C03","g","c","v","ดาดฟ้ายามพระอาทิตย์ตก","ฝัน ละมุน","Sitting together on a graffiti rooftop ledge at sunset, the woman's head resting on the man's shoulder.","Casual streetwear: varsity jacket and jeans.","Dreamy, content smiles."],
+["C04","g","c","h","หลบฝนใต้แจ็กเก็ต","โรแมนติก ซึ้ง","Running in the rain past graffiti walls, sharing one jacket held over their heads, neon reflections.","Woman: denim jacket. Man: hoodie.","Laughing, playful romance."],
+["C05","g","c","v","ขี่หลังในสเก็ตพาร์ค","สดใส ขี้เล่น","Piggyback ride inside a graffiti skate park.","Skater outfits: flannel shirts, beanies.","Huge carefree laughter."],
+["C06","g","c","h","สงครามสาดสี","ซน มีความสุข","Playful paint fight in front of a graffiti wall, colorful splashes flying.","White tees and pants covered in paint.","Joyful, mischievous grins."],
+["C07","g","c","v","หันหลังชนกันในสถานีใต้ดิน","คูล คู่หูเท่","Standing back to back in a graffiti subway station.","Matching black techwear outfits.","Cool confident expressions."],
+["C08","g","c","h","เต้นใต้แสง UV","มีเสน่ห์ เคลิ้ม","Dancing together in a UV blacklight room with glowing graffiti.","Woman: reflective outfit. Man: dark jacket.","Captivated by each other, smiling."],
+// ===== COUPLE — HARLEY (6) =====
+["C09","h","c","h","ขี่ซ้อนท้ายบนทางหลวง","อิสระ รัก","Riding a Harley-Davidson Fat Boy together on a desert highway, the woman sitting behind hugging the man.","Matching leather jackets, sunglasses.","Free and happy."],
+["C10","h","c","v","พิงรถในอู่วินเทจ","เท่ อบอุ่น","Leaning on a Harley-Davidson in a vintage garage, the man's arm around the woman.","Woman: biker jacket. Man: leather vest.","Warm confident smiles."],
+["C11","h","c","h","จุดชมวิวริมทะเล","ซึ้ง โรแมนติก","Stopped at a coastal viewpoint at sunset beside a Harley-Davidson, embracing.","Light jackets and jeans.","Romantic, tender gaze."],
+["C12","h","c","v","ขี่ฝ่าเมืองยามค่ำ","ตื่นเต้น","Riding through a neon city at night together on a Harley-Davidson.","Black leather biker outfits, half helmets.","Excited, thrilled."],
+["C13","h","c","v","คู่ไบเกอร์ยุค 70","ชิล วินเทจ","1970s film photo look, posing on a Harley chopper.","Woman: fringe jacket. Man: denim vest.","Laid-back, in love."],
+["C14","h","c","h","สาวขับ หนุ่มซ้อน","ซน หัวเราะ","The woman rides a Harley-Davidson with the man sitting behind her, scenic road.","Riding jackets, open-face helmets.","Woman: proud grin. Man: laughing."],
+// ===== COUPLE — DRIFT (6) =====
+["C15","d","c","h","คู่หูข้าง GT-R คืนแข่ง","มั่นใจ","Standing in front of a matte black Nissan GT-R R35 at a night track, tire smoke all around.","Matching black and red racing suits.","Confident smirks."],
+["C16","d","c","v","ลานจอดใต้ดินกับ R34","คูล โรแมนติก","Underground garage, leaning on a blue Nissan Skyline R34 GT-R together.","Streetwear bomber jackets.","Cool but affectionate."],
+["C17","d","c","v","ฉลองแชมป์บนโพเดียม","ดีใจสุดขีด","On the podium celebrating, champagne spraying, the man lifting the woman.","Racing suits with sponsor patches.","Ecstatic joy."],
+["C18","d","c","h","นั่งบนฝากระโปรง AE86 ยามรุ่ง","สงบ อบอุ่น","Sitting on the hood of a Toyota AE86 at a misty mountain pass at sunrise.","Hoodies and track pants.","Peaceful, content smiles."],
+["C19","d","c","h","เดตในคาร์มีตติ้ง","สนุก สดใส","Night JDM car meet with neon underglow, standing among the cars.","Casual streetwear.","Happy, chatting and smiling."],
+["C20","d","c","v","คู่แข่งที่กลายเป็นคนรัก","ขี้เล่น ท้าทาย","Facing each other playfully beside two drift cars, holding helmets, track background.","Racing suits in contrasting colors.","Playful competitive smirks."]
+];
+
+const STYLE={
+g:"Urban street art photography with vivid graffiti, spray paint textures and drips, bold saturated colors, cinematic lighting, editorial streetwear magazine look.",
+h:"Cinematic motorcycle lifestyle photography, authentic Harley-Davidson details, chrome reflections, filmic color grading, shallow depth of field.",
+d:"High-octane motorsport photography, JDM car culture, dramatic tire smoke, motion blur, cinematic lighting, sharp detailed cars."
+};
+const RATIO={v:"Vertical portrait orientation, 2:3 aspect ratio (1024x1536).",h:"Horizontal landscape orientation, 3:2 aspect ratio (1536x1024)."};
+const CATN={g:"กราฟฟิตี้",h:"Harley",d:"ดริฟท์"};
+
+function build(it){
+  const [id,cat,type,ratio,,,scene,outfit,expr]=it;
+  const idS = type==="s"
+    ? "Use the attached reference photo as the identity source. Keep the person's face exactly the same: facial structure, eyes, nose, lips, skin tone, age and ethnicity must match the reference with high likeness. Do not beautify or alter the identity. Works for any gender: tailor the outfit's cut and fit naturally to the person's gender. Keep the reference hairstyle unless the scene requires otherwise."
+    : "Use the two attached reference photos: the female photo is the identity for the woman and the male photo is the identity for the man. Keep both faces exactly as in their references with high likeness: facial structure, skin tone, age and ethnicity. Do not swap, blend or beautify the faces. They are a romantic couple with natural chemistry and realistic body interaction.";
+  const tail = type==="s"
+    ? "One main subject only. Photorealistic, ultra-detailed, natural skin texture, realistic hands, no text, no watermark."
+    : "Exactly two main subjects. Photorealistic, ultra-detailed, natural skin texture, realistic hands, no text, no watermark.";
+  return `${idS}\n\nScene: ${scene}\nOutfit: ${outfit}\nExpression: ${expr}\nStyle: ${STYLE[cat]}\nFormat: ${RATIO[ratio]}\n${tail}`;
+}
+
+const F={type:"all",cat:"all",ratio:"all",q:""};
+const grid=document.getElementById("grid");
+
+function render(){
+  const q=F.q.toLowerCase();
+  const list=D.filter(it=>(F.type==="all"||it[2]===F.type)&&(F.cat==="all"||it[1]===F.cat)&&(F.ratio==="all"||it[3]===F.ratio)&&(!q||it.join(" ").toLowerCase().includes(q)));
+  document.getElementById("count").textContent=`แสดง ${list.length} / ${D.length}`;
+  grid.innerHTML=list.map(it=>{
+    const p=build(it);
+    return `<div class="card ${it[1]}">
+      <div class="top"><span class="id">${it[0]}</span>
+        <div class="tags"><span class="tag ${it[2]==="c"?"cp":""}">${it[2]==="s"?"เดี่ยว · แนบ 1 รูป":"คู่รัก · แนบ 2 รูป"}</span>
+        <span class="tag">${CATN[it[1]]}</span><span class="tag">${it[3]==="v"?"แนวตั้ง 2:3":"แนวนอน 3:2"}</span></div></div>
+      <div class="title">${it[4]}</div>
+      <div class="mood">อารมณ์: ${it[5]}</div>
+      <pre>${p.replace(/</g,"&lt;")}</pre>
+      <button class="btn" data-id="${it[0]}">คัดลอกพรอมต์</button>
+    </div>`;}).join("");
+}
+
+async function copyText(t){
+  try{await navigator.clipboard.writeText(t);}
+  catch(e){const a=document.createElement("textarea");a.value=t;document.body.appendChild(a);a.select();document.execCommand("copy");a.remove();}
+}
+
+grid.addEventListener("click",async e=>{
+  const b=e.target.closest(".btn"); if(!b) return;
+  const it=D.find(x=>x[0]===b.dataset.id);
+  await copyText(build(it));
+  b.textContent="คัดลอกแล้ว ✓"; b.classList.add("ok");
+  const t=document.getElementById("toast"); t.classList.add("show");
+  setTimeout(()=>{b.textContent="คัดลอกพรอมต์";b.classList.remove("ok");t.classList.remove("show");},1600);
+});
+
+document.querySelectorAll(".chip").forEach(c=>c.addEventListener("click",()=>{
+  document.querySelectorAll(`.chip[data-f="${c.dataset.f}"]`).forEach(x=>x.classList.remove("on"));
+  c.classList.add("on"); F[c.dataset.f]=c.dataset.v; render();
+}));
+document.getElementById("q").addEventListener("input",e=>{F.q=e.target.value;render();});
+render();
+</script>
+</body>
+</html>

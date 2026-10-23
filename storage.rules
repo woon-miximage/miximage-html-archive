@@ -1,0 +1,56 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isImage() {
+      return request.resource.contentType.matches('image/.*');
+    }
+
+    function isHtml() {
+      return request.resource.contentType.matches('text/html.*');
+    }
+
+    // HTML source files uploaded into archive
+    match /html_files/{fileId}/{fileName} {
+      // Allow read to authenticated users or public downloads
+      allow read: if true;
+      
+      // Allow create only for signed-in users with valid HTML and size limit (<= 15MB)
+      allow create, update: if isSignedIn()
+        && isHtml()
+        && request.resource.size > 0
+        && request.resource.size <= 15 * 1024 * 1024;
+
+      allow delete: if isSignedIn();
+    }
+
+    // Cover images for file cards
+    match /covers/{fileId}/{fileName} {
+      allow read: if true;
+      allow create, update: if isSignedIn()
+        && isImage()
+        && request.resource.size > 0
+        && request.resource.size <= 5 * 1024 * 1024;
+      allow delete: if isSignedIn();
+    }
+
+    // Preview screenshots
+    match /previews/{fileId}/{fileName} {
+      allow read: if true;
+      allow create, update: if isSignedIn()
+        && isImage()
+        && request.resource.size > 0
+        && request.resource.size <= 8 * 1024 * 1024;
+      allow delete: if isSignedIn();
+    }
+
+    // Deny all other paths by default
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

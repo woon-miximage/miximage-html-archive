@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ทำภาพหน้างานศพ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&family=Noto+Serif+Thai:wght@700&display=swap" rel="stylesheet">
+<style>
+:root{--br:#8b5e1a;--or:#e8760f;--bg:#f5f1ea;--ln:#e6dfd2;--tx:#2b2418;--mu:#7b6f5c;--st:#e9e5dc}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:14px 'Noto Sans Thai','Leelawadee UI',Tahoma,sans-serif}
+button{font:inherit;cursor:pointer}
+header{background:#fff;border-bottom:1px solid var(--ln);padding:18px 0}
+.wrap{max-width:1240px;margin:0 auto;padding:0 24px}
+h1{margin:0;font:700 24px 'Noto Serif Thai','Leelawadee UI',serif;color:var(--br)}
+header p{margin:2px 0 0;color:var(--mu)}
+main.wrap{display:grid;grid-template-columns:380px minmax(0,1fr);gap:32px;padding-top:28px;padding-bottom:48px;align-items:start}
+h2{font-size:15px;font-weight:700;margin:22px 0 8px}
+h2:first-child{margin-top:0}
+svg.ic{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:-3px;flex:none}
+.sr{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden}
+.drop{display:flex;gap:8px;align-items:center;justify-content:center;padding:18px;border:1.5px dashed #d8cdb8;border-radius:10px;background:#fff;cursor:pointer;font-weight:500;text-align:center}
+#file:focus-visible+.drop,button:focus-visible,input:focus-visible{outline:2px solid var(--or);outline-offset:2px}
+label.f{display:block;margin:10px 0 4px;font-weight:500}
+input[type=text],input[type=number]{width:100%;padding:10px 12px;border:1px solid var(--ln);border-radius:8px;background:#f8f6f1;font:inherit;color:var(--tx)}
+input:disabled{opacity:.5}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.sizes{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.sz{padding:10px 6px;border:1px solid var(--ln);background:#fff;border-radius:8px;color:var(--tx)}
+.sz[aria-pressed=true]{background:var(--br);border-color:var(--br);color:#fff;font-weight:600}
+.hint{font-size:12px;color:var(--mu);margin:8px 0 0}
+.frames{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.fr{padding:0;border:2px solid transparent;border-radius:6px;background:#fff;overflow:hidden}
+.fr[aria-pressed=true]{border-color:var(--br)}
+.fr canvas{display:block;width:100%;height:auto}
+.bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:#fff;border:1px solid var(--ln);border-radius:14px;padding:10px 16px}
+.bar .lb{color:var(--mu);font-size:12.5px}
+#chips{display:flex;gap:6px;flex-wrap:wrap}
+.sp{flex:1}
+.chip{display:inline-flex;gap:4px;align-items:center;padding:6px 10px;border-radius:8px;border:0;background:#f2eee6;color:var(--tx);font-size:12.5px}
+.chip[aria-pressed=true]{background:var(--br);color:#fff}
+.chip svg.ic{width:12px;height:12px}
+.btn{display:inline-flex;gap:6px;align-items:center;padding:8px 12px;border:1px solid var(--ln);background:#fff;border-radius:8px;color:var(--tx);font-size:12.5px}
+.btn.or{background:var(--or);border-color:var(--or);color:#fff;font-weight:600}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.stage{position:relative;background:var(--st);border-radius:14px;margin:14px 0;padding:20px;display:flex;justify-content:center;min-height:300px}
+#badges{position:absolute;left:14px;top:12px;display:flex;gap:6px;flex-wrap:wrap;z-index:1;pointer-events:none}
+.bd{background:#fff;color:var(--or);border:1px solid #f1d9bd;border-radius:99px;padding:3px 9px;font-size:11.5px}
+canvas#cv{display:block;box-shadow:0 2px 14px rgba(0,0,0,.18);background:#fff;touch-action:auto}
+.card{background:#fff;border:1px solid var(--ln);border-radius:14px;padding:16px 20px;margin-bottom:14px}
+.head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;border-bottom:1px solid var(--ln);padding-bottom:10px}
+.head b{font-size:15px}
+.head p{margin:2px 0 0;font-size:12px;color:var(--mu)}
+.tabs{display:flex;background:var(--st);border-radius:10px;padding:4px;gap:4px;margin:14px 0}
+.tab{flex:1;border:0;background:transparent;padding:9px 6px;border-radius:8px;color:var(--mu);font-size:12.5px}
+.tab[aria-selected=true]{background:#fff;color:var(--tx);font-weight:600}
+.sub{border:1px solid var(--ln);border-radius:12px;padding:12px 16px;margin-bottom:12px}
+.sh{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.sh .t{font-weight:600;font-size:13px}
+.pb{background:#fdf0dc;color:var(--or);border-radius:6px;padding:3px 8px;font-size:11.5px}
+.row{display:grid;grid-template-columns:150px 1fr 76px;gap:12px;align-items:center;margin:10px 0 0}
+.row label{font-size:12.5px}
+.row input[type=range]{width:100%;accent-color:var(--br)}
+.row input[type=number]{padding:6px 8px;text-align:center;background:#fff}
+.sw{display:inline-flex;align-items:center;gap:8px;background:none;border:0;color:var(--mu);font-size:12.5px;padding:4px}
+.sw i{width:36px;height:20px;border-radius:99px;background:#ddd5c6;position:relative;flex:none}
+.sw i::after{content:'';position:absolute;left:2px;top:2px;width:16px;height:16px;border-radius:50%;background:#fff;transition:left .15s}
+.sw[aria-pressed=true] i{background:var(--br)}
+.sw[aria-pressed=true] i::after{left:18px}
+.sw:disabled{opacity:.45;cursor:not-allowed}
+.go{width:100%;padding:16px;border:0;border-radius:10px;background:var(--br);color:#fff;font-weight:700;font-size:16px;display:flex;justify-content:center;gap:8px;align-items:center}
+.go:disabled{opacity:.6;cursor:wait}
+#status{min-height:20px;margin:8px 0 0;color:var(--mu);font-size:12.5px}
+@media(max-width:900px){main.wrap{grid-template-columns:1fr}.row{grid-template-columns:110px 1fr 64px}.tab{font-size:11px}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></symbol>
+<symbol id="i-unlock" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 7.5-2"/></symbol>
+<symbol id="i-center" viewBox="0 0 24 24"><path d="M4 6h16M7 12h10M4 18h16"/></symbol>
+<symbol id="i-img" viewBox="0 0 24 24"><path d="M14 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><circle cx="9" cy="10" r="1.5"/><path d="m4 17 5-5 4 4M18 3v6M15 6h6"/></symbol>
+<symbol id="i-dl" viewBox="0 0 24 24"><path d="M12 4v11m-4-4 4 4 4-4M5 20h14"/></symbol>
+<symbol id="i-move" viewBox="0 0 24 24"><path d="M12 3v18M3 12h18M9 6l3-3 3 3M9 18l3 3 3-3M6 9l-3 3 3 3M18 9l3 3-3 3"/></symbol>
+<symbol id="i-reset" viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 0 3-6.2M4 4v4h4"/></symbol>
+<symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></symbol>
+<symbol id="i-cal" viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M8 3v4M16 3v4"/></symbol>
+<symbol id="i-hour" viewBox="0 0 24 24"><path d="M6 3h12M6 21h12M7 3c0 5 5 6 5 9s-5 4-5 9M17 3c0 5-5 6-5 9s5 4 5 9"/></symbol>
+<symbol id="i-pic" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="1.5"/><path d="m4 18 5-5 4 4 3-3 4 4"/></symbol>
+</defs></svg>
+
+<header><div class="wrap"><h1>ทำภาพหน้างานศพ</h1><p>เลือกกรอบ ใส่รูปและข้อมูล แล้วบันทึกเป็นไฟล์พร้อมพิมพ์ 300dpi</p></div></header>
+
+<main class="wrap">
+<section id="side">
+  <h2>1. รูปภาพ</h2>
+  <input type="file" id="file" accept="image/*" class="sr">
+  <label class="drop" for="file"><svg class="ic"><use href="#i-img"/></svg><span id="fileLabel">เลือกรูปผู้วายชนม์</span></label>
+
+  <h2>2. ข้อมูล</h2>
+  <label class="f" for="fName">ชื่อ</label>
+  <input type="text" id="fName" maxlength="80" placeholder="คุณแม่ กอง จันบัวลา" autocomplete="off">
+  <div class="two">
+    <div><label class="f" for="fBirth">ชาตะ</label><input type="text" id="fBirth" maxlength="30" placeholder="20 มี.ค. 2494" autocomplete="off"></div>
+    <div><label class="f" for="fDeath">มรณะ</label><input type="text" id="fDeath" maxlength="30" placeholder="1 ต.ค. 2569" autocomplete="off"></div>
+  </div>
+  <label class="f" for="fAge">อายุ (ปี)</label>
+  <input type="text" id="fAge" inputmode="numeric" maxlength="3" autocomplete="off">
+
+  <h2>3. ขนาดพิมพ์</h2>
+  <div class="sizes" id="sizes"></div>
+  <p class="hint" id="sizeInfo"></p>
+
+  <h2>4. กรอบ</h2>
+  <div class="frames" id="frames"></div>
+  <p class="hint" id="frameName"></p>
+</section>
+
+<section id="work">
+  <div class="bar">
+    <span class="lb">เลือกส่วนที่จะปรับ:</span>
+    <div id="chips" role="group" aria-label="เลือกส่วนที่จะปรับ"></div>
+    <div class="sp"></div>
+    <button type="button" class="btn or" id="lockBtn"></button>
+    <button type="button" class="btn" id="centerBtn"><svg class="ic"><use href="#i-center"/></svg>จัดกึ่งกลาง</button>
+  </div>
+
+  <div class="stage" id="stage">
+    <div id="badges"></div>
+    <canvas id="cv" role="img" aria-label="พรีวิวภาพหน้างานศพ"></canvas>
+  </div>
+
+  <div class="card">
+    <div class="head">
+      <div><b>ปรับแต่งแยกอิสระ (รูป / ชื่อ / ชาตะ-มรณะ / อายุ)</b><p>คลิกบนผืนผ้าใบหรือใช้แถบด้านล่างเพื่อปรับตำแหน่งและขนาดของแต่ละส่วนแยกขาดจากกัน</p></div>
+      <div>
+        <button type="button" class="sw" id="guideTgl" aria-pressed="false"><i></i>แสดงกรอบตำแหน่ง</button>
+        <button type="button" class="btn" id="resetBtn"><svg class="ic"><use href="#i-reset"/></svg>รีเซ็ตทั้งหมด</button>
+      </div>
+    </div>
+
+    <div class="tabs" id="tabs" role="tablist" aria-label="ส่วนที่จะปรับ">
+      <button type="button" class="tab" role="tab" data-part="photo"><svg class="ic"><use href="#i-pic"/></svg> รูปภาพ</button>
+      <button type="button" class="tab" role="tab" data-part="name"><svg class="ic"><use href="#i-user"/></svg> 1. ชื่อผู้วายชนม์</button>
+      <button type="button" class="tab" role="tab" data-part="dates"><svg class="ic"><use href="#i-cal"/></svg> 2. ชาตะ - มรณะ</button>
+      <button type="button" class="tab" role="tab" data-part="age"><svg class="ic"><use href="#i-hour"/></svg> 3. สิริอายุ</button>
+    </div>
+
+    <div role="tabpanel">
+      <div class="sub">
+        <div class="sh">
+          <svg class="ic"><use href="#i-move"/></svg><span class="t" id="panelTitle"></span><span class="pb" id="posBadge"></span>
+          <span class="sp"></span>
+          <button type="button" class="btn" id="unlockBtn"></button>
+          <button type="button" class="btn" id="center2"><svg class="ic"><use href="#i-center"/></svg>จัดกึ่งกลาง</button>
+          <button type="button" class="sw" id="lockXTgl" aria-pressed="false"><i></i>ล็อคแกน X</button>
+        </div>
+        <div class="row"><label for="scR" id="scL"></label><input type="range" id="scR"><input type="number" id="scN" aria-label="ขนาด"></div>
+        <div class="row"><label for="pxR" id="pxL"></label><input type="range" id="pxR"><input type="number" id="pxN" aria-label="ตำแหน่ง X"></div>
+        <div class="row"><label for="pyR" id="pyL"></label><input type="range" id="pyR"><input type="number" id="pyN" aria-label="ตำแหน่ง Y"></div>
+      </div>
+      <div class="sub" id="frameCard">
+        <div class="sh"><span class="t">ขนาดกรอบรูปภาพ</span></div>
+        <div class="row"><label for="fsR">ขนาดกรอบ</label><input type="range" id="fsR" min="0.4" max="1.1" step="0.01"><input type="number" id="fsN" min="0.4" max="1.1" step="0.01" aria-label="ขนาดกรอบรูปภาพ"></div>
+      </div>
+    </div>
+  </div>
+
+  <button type="button" class="go" id="exportBtn"></button>
+  <p id="status" role="status"></p>
+</section>
+</main>
+
+<script>
+'use strict';
+
+/* ---------- ค่าคงที่ ---------- */
+// ขนาดไฟล์ = นิ้ว × 300dpi (A4 ใช้ 210×297 มม. จริง = 2480×3508)
+const SIZES = {
+  a4:     { l: 'A4 (8.27×11.69 นิ้ว)', w: 2480, h: 3508 },
+  '10x12':{ l: '10×12 นิ้ว', w: 3000, h: 3600 },
+  '10x15':{ l: '10×15 นิ้ว', w: 3000, h: 4500 },
+  '12x18':{ l: '12×18 นิ้ว', w: 3600, h: 5400 }
+};
+const PARTS = ['photo', 'name', 'dates', 'age'];
+const PNAME = { photo: 'รูปภาพ', name: 'ชื่อ', dates: 'ชาตะ-มรณะ', age: 'สิริอายุ' };
+const BADGE = { photo: 'ภาพ', name: 'ชื่อ', dates: 'ชาตะ-มรณะ', age: 'อายุ' };
+const TITLE = { photo: 'รูปภาพ', name: 'ชื่อผู้วายชนม์', dates: 'ชาตะ - มรณะ', age: 'สิริอายุ' };
+// ช่วงเลื่อนตำแหน่ง: รูป = % ของกรอบรูป, ข้อความ = % ของหน้ากระดาษ (เหตุผล: ข้อความต้องเลื่อนข้ามทั้งหน้าได้)
+const RNG = { photo: 100, name: 50, dates: 50, age: 50 };
+const SOL = { gold: '#b88a1e', silver: '#9aa3ad' };
+// bands = [ระยะเว้นขอบ, ความหนา, สี] เป็นสัดส่วนของ W; corner = ลายมุม
+const FRAMES = [
+  { n: 'ทองคลาสสิก', paper: '#f6f4ef', ink: '#1b1b1b', acc: 'gold', bands: [[.012, .020, 'gold'], [.036, .004, 'gold']], corner: 'scroll' },
+  { n: 'ดำ-ทอง', paper: '#fbf6e4', ink: '#161616', acc: 'gold', bands: [[.012, .018, '#141414'], [.036, .004, 'gold']], corner: 'none' },
+  { n: 'เงินเงา', paper: '#ffffff', ink: '#222831', acc: 'silver', bands: [[.012, .016, 'silver'], [.034, .004, 'silver']], corner: 'scroll' },
+  { n: 'ครีมทอง', paper: '#fbf3df', ink: '#2a2113', acc: 'gold', bands: [[.014, .006, 'gold'], [.026, .003, 'gold']], corner: 'scroll' },
+  { n: 'ม่วงราชวงศ์', paper: '#efedfb', ink: '#22123f', acc: 'gold', bands: [[.010, .026, '#2a1450'], [.040, .004, 'gold']], corner: 'none' },
+  { n: 'ขาว-ทอง', paper: '#ffffff', ink: '#2b2b2b', acc: 'gold', bands: [[.012, .010, 'gold'], [.030, .004, 'gold']], corner: 'scroll' },
+  { n: 'ใบไม้เขียว', paper: '#ffffff', ink: '#1f2d1f', acc: '#4f7a4a', bands: [[.016, .003, '#8fb08a']], corner: 'leaf' },
+  { n: 'ไม้สีน้ำตาล', paper: '#f8ead6', ink: '#2b1a0d', acc: '#7a5230', bands: [[.008, .032, '#4a2a14'], [.044, .004, '#c9a06a']], corner: 'none' },
+  { n: 'ครีมเรียบ', paper: '#fdf1e6', ink: '#4a3425', acc: '#d9b99b', bands: [[.016, .003, '#e4c9ae']], corner: 'none' },
+  { n: 'ขาว-ดำ', paper: '#ffffff', ink: '#111111', acc: '#111111', bands: [[.012, .008, '#111111'], [.028, .003, '#111111']], corner: 'none' }
+];
+const FAM = '"Noto Sans Thai","Leelawadee UI",Tahoma,sans-serif';
+
+/* ---------- State เดียว ---------- */
+const defPart = () => ({ x: 0, y: 0, s: 1, locked: true, lockX: false }); // เริ่มต้นล็อคกึ่งกลางทุกส่วน ตามต้นแบบ
+// รูปภาพเริ่มต้น "ปลดล็อค" เพื่อให้คลิกค้างบนรูปแล้วลากซ้าย-ขวา/บน-ล่างได้ทันที ส่วนข้อความยังล็อคกึ่งกลางไว้
+const freshParts = () => ({ photo: { ...defPart(), locked: false }, name: defPart(), dates: defPart(), age: defPart() });
+const initial = () => ({
+  photo: null, photoName: '', name: '', birth: '', death: '', age: '',
+  size: 'a4', frame: 0, sel: 'photo', parts: freshParts(), frameScale: 1,
+  showBoxes: false, fontsReady: false, busy: false, msg: ''
+});
+let state = initial();
+let boxes = {};   // กรอบอ้างอิงที่ render คำนวณไว้ (ข้อมูลที่ได้จากการวาด ไม่ใช่ state) ใช้ hit-test/ลาก
+let raf = 0;
+
+const $ = id => document.getElementById(id);
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+const ic = id => `<svg class="ic"><use href="#${id}"/></svg>`;
+
+function setState(patch) { state = { ...state, ...patch }; syncUI(); scheduleRender(); }
+function scheduleRender() { if (!raf) raf = requestAnimationFrame(render); }
+function setPart(id, p) { setState({ parts: { ...state.parts, [id]: { ...state.parts[id], ...p } } }); }
+function clampPart(id, k, v) { return k === 's' ? clamp(v, .5, id === 'photo' ? 6 : 2) : clamp(v, -RNG[id], RNG[id]); }
+
+/* ---------- ฟอนต์ ---------- */
+let fontP = null;
+function loadFonts() {
+  if (!fontP) {
+    const jobs = [400, 500, 600, 700].map(w => document.fonts.load(`${w} 40px "Noto Sans Thai"`, 'กขค'));
+    jobs.push(document.fonts.load('700 40px "Noto Serif Thai"', 'กขค'));
+    // รอสูงสุด 5 วินาที เผื่อออฟไลน์ แล้วใช้ฟอนต์สำรองต่อ
+    fontP = Promise.race([Promise.all(jobs), new Promise(r => setTimeout(r, 5000))]).catch(() => {});
+  }
+  return fontP;
+}
+
+/* ---------- คำนวณอายุจากข้อความวันที่ไทย ---------- */
+const MON = [['มกราคม', 'มค'], ['กุมภาพันธ์', 'กพ'], ['มีนาคม', 'มีค'], ['เมษายน', 'เมย'], ['พฤษภาคม', 'พค'], ['มิถุนายน', 'มิย'],
+  ['กรกฎาคม', 'กค'], ['สิงหาคม', 'สค'], ['กันยายน', 'กย'], ['ตุลาคม', 'ตค'], ['พฤศจิกายน', 'พย'], ['ธันวาคม', 'ธค']];
+function parseDate(t) {
+  const m = /(\d{1,2})\s*([^\d\s]+)\s*(\d{4})/.exec(t || '');
+  if (!m) return null;
+  const k = m[2].replace(/\./g, ''), mi = MON.findIndex(a => a.includes(k));
+  const d = +m[1], y = +m[3];
+  if (mi < 0 || d < 1 || d > 31) return null;
+  return { d, m: mi + 1, y: y > 2400 ? y - 543 : y }; // รองรับทั้ง พ.ศ. และ ค.ศ.
+}
+function autoAge(s) {
+  const b = parseDate(s.birth), d = parseDate(s.death);
+  if (!b || !d) return null; // ไม่ใช้วันนี้แทนวันมรณะ เพราะอายุต้องนับถึงวันมรณะเท่านั้น
+  let a = d.y - b.y;
+  if (d.m < b.m || (d.m === b.m && d.d < b.d)) a--;
+  return a >= 0 && a < 150 ? a : null;
+}
+
+/* ---------- วาด (ฟังก์ชันเดียวใช้ทั้งพรีวิวและไฟล์ส่งออก) ---------- */
+function paint(c, W, H, t) {
+  if (t !== 'gold' && t !== 'silver') return t;
+  const g = c.createLinearGradient(0, 0, W, H);
+  (t === 'gold' ? ['#8c6414', '#f3d97f', '#b8861e', '#fff1b5', '#94691a'] : ['#7d8590', '#f1f4f7', '#a4adb8', '#ffffff', '#8a929c'])
+    .forEach((col, i) => g.addColorStop(i / 4, col));
+  return g;
+}
+
+function corner(c, W, f, k, x, y, sx, sy) {
+  c.save(); c.translate(x, y); c.scale(sx * k, sy * k);
+  c.lineCap = 'round'; c.lineWidth = .0035 * W / k;
+  c.strokeStyle = c.fillStyle = SOL[f.acc] || f.acc; // ใช้สีเดียวในพิกัดที่ถูกสเกล (ไล่เฉดจะเพี้ยน)
+  if (f.corner === 'scroll') {
+    for (const z of [1, .6]) {
+      const sp = () => {
+        c.beginPath(); c.moveTo(.04 * z, .34 * z);
+        c.bezierCurveTo(.04 * z, .14 * z, .14 * z, .05 * z, .32 * z, .05 * z);
+        c.bezierCurveTo(.44 * z, .05 * z, .48 * z, .16 * z, .41 * z, .22 * z);
+        c.bezierCurveTo(.35 * z, .27 * z, .26 * z, .22 * z, .29 * z, .15 * z);
+        c.stroke();
+      };
+      sp(); c.save(); c.transform(0, 1, 1, 0, 0, 0); sp(); c.restore();
+    }
+    c.beginPath(); c.ellipse(.2, .2, .06, .024, Math.PI / 4, 0, 7); c.fill();
+    c.beginPath(); c.arc(.045, .045, .018, 0, 7); c.fill();
+  } else {
+    for (const [r, n, sz] of [[.2, 6, .07], [.3, 8, .055]]) {
+      for (let i = 0; i < n; i++) {
+        const t = (i + .5) / n * Math.PI / 2;
+        c.save(); c.translate(.03 + r * Math.cos(t), .03 + r * Math.sin(t)); c.rotate(t + Math.PI / 2);
+        c.fillStyle = i % 2 ? '#5d8a56' : '#3f6b3b';
+        c.beginPath(); c.ellipse(0, 0, sz, sz * .38, 0, 0, 7); c.fill(); c.restore();
+      }
+    }
+  }
+  c.restore();
+}
+
+// พิกัด/ขนาดทั้งหมดเป็นสัดส่วนของ W (แนวนอน/ฟอนต์/เส้น) และ H (ตำแหน่งแนวตั้ง)
+function renderMemorial(ctx, W, H, s) {
+  const f = FRAMES[s.frame], P = s.parts, out = {};
+  ctx.save();
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = f.paper; ctx.fillRect(0, 0, W, H);
+
+  for (const [i, w, col] of f.bands) {
+    ctx.lineWidth = w * W; ctx.strokeStyle = paint(ctx, W, H, col);
+    const o = (i + w / 2) * W; ctx.strokeRect(o, o, W - 2 * o, H - 2 * o);
+  }
+  if (f.corner !== 'none') {
+    const k = .12 * W, o = .008 * W;
+    [[o, o, 1, 1], [W - o, o, -1, 1], [o, H - o, 1, -1], [W - o, H - o, -1, -1]].forEach(a => corner(ctx, W, f, k, ...a));
+  }
+
+  // ช่องรูป: ย่อ/ขยายรอบจุดกึ่งกลางด้วย frameScale
+  const fs = s.frameScale, sw = .82 * W * fs, sh = .60 * H * fs, cx = .5 * W, cy = .365 * H;
+  const sx = cx - sw / 2, sy = cy - sh / 2;
+  ctx.fillStyle = '#ffffff'; ctx.fillRect(sx, sy, sw, sh);
+  if (s.photo) {
+    const p = P.photo, im = s.photo, k = Math.max(sw / im.width, sh / im.height) * p.s; // zoom 1 = เต็มช่อง (cover)
+    ctx.save(); ctx.beginPath(); ctx.rect(sx, sy, sw, sh); ctx.clip();
+    ctx.drawImage(im, cx + p.x / 100 * sw - im.width * k / 2, cy + p.y / 100 * sh - im.height * k / 2, im.width * k, im.height * k);
+    ctx.restore();
+  }
+  out.photo = { x: sx / W, y: sy / H, w: sw / W, h: sh / H };
+
+  // เส้นคั่นประดับ (ติดกับกรอบ ไม่เลื่อนตามชื่อ)
+  const line = (y, half) => {
+    ctx.strokeStyle = ctx.fillStyle = paint(ctx, W, H, f.acc); ctx.lineWidth = .0016 * W;
+    ctx.beginPath(); ctx.moveTo(.5 * W - half * W, y); ctx.lineTo(.5 * W - .03 * W, y);
+    ctx.moveTo(.5 * W + .03 * W, y); ctx.lineTo(.5 * W + half * W, y); ctx.stroke();
+    const d = .008 * W; ctx.beginPath(); ctx.moveTo(.5 * W, y - d); ctx.lineTo(.5 * W + d, y); ctx.lineTo(.5 * W, y + d); ctx.lineTo(.5 * W - d, y); ctx.fill();
+  };
+  line(.705 * H, .33); line(.797 * H, .22);
+
+  if (!s.hideText) {
+    const font = (w, px) => `${w} ${px}px ${FAM}`;
+    // ย่อฟอนต์อัตโนมัติถ้ายาวเกินความกว้างที่กำหนด ป้องกันข้อความทะลุกรอบ
+    const fit = (txt, w, px, max) => { ctx.font = font(w, px); const m = ctx.measureText(txt).width; return m > max ? px * max / m : px; };
+    ctx.fillStyle = f.ink; ctx.textBaseline = 'middle';
+
+    // ชื่อ
+    const nm = s.name.trim() || 'ชื่อ - นามสกุล', pn = P.name;
+    const npx = fit(nm, 700, .068 * W * pn.s, .78 * W);
+    ctx.font = font(700, npx); ctx.textAlign = 'center';
+    const nx = .5 * W + pn.x / 100 * W, ny = .752 * H + pn.y / 100 * H, nw = ctx.measureText(nm).width;
+    ctx.fillText(nm, nx, ny);
+    out.name = { x: (nx - nw / 2) / W, y: (ny - npx * .75) / H, w: nw / W, h: npx * 1.5 / H };
+
+    // ชาตะ / มรณะ: แยกเป็น 3 คอลัมน์ (คำนำหน้า | : | วันที่) วาดทีละคอลัมน์ที่ x เดียวกัน
+    // เหตุผล: สระ/วรรณยุกต์ทำให้ "ชาตะ" กับ "มรณะ" กว้างไม่เท่ากัน ถ้าวาดเป็นบรรทัดเดียว เครื่องหมาย : จะเหลื่อมกัน
+    const v1 = s.birth.trim() || 'วัน เดือน ปี', v2 = s.death.trim() || 'วัน เดือน ปี', pd = P.dates;
+    const colW = px => {
+      ctx.font = font(500, px);
+      const lw = Math.max(ctx.measureText('ชาตะ').width, ctx.measureText('มรณะ').width), g = ctx.measureText(' ').width;
+      const cw = ctx.measureText(':').width, vw = Math.max(ctx.measureText(v1).width, ctx.measureText(v2).width);
+      return { lw, g, cw, bw: lw + g * 2 + cw + vw };
+    };
+    let dpx = .031 * W * pd.s, m = colW(dpx);
+    if (m.bw > .78 * W) { dpx *= .78 * W / m.bw; m = colW(dpx); } // ย่อให้พอดีความกว้าง
+    const bw = m.bw;
+    ctx.font = font(500, dpx); ctx.textAlign = 'left';
+    const dx = .5 * W + pd.x / 100 * W - bw / 2, y1 = .835 * H + pd.y / 100 * H, y2 = y1 + dpx * 1.65;
+    const colonX = dx + m.lw + m.g, valueX = colonX + m.cw + m.g;
+    ctx.fillText('ชาตะ', dx, y1); ctx.fillText(':', colonX, y1); ctx.fillText(v1, valueX, y1);
+    ctx.fillText('มรณะ', dx, y2); ctx.fillText(':', colonX, y2); ctx.fillText(v2, valueX, y2);
+    out.dates = { x: dx / W, y: (y1 - dpx * .75) / H, w: bw / W, h: (y2 - y1 + dpx * 1.5) / H };
+
+    // สิริอายุ (ถ้าไม่ได้กรอก ใช้ค่าที่คำนวณจากวันที่ ถ้าคำนวณไม่ได้แสดง …)
+    const av = s.age.trim() || (autoAge(s) ?? '…'), at = `สิริอายุ ${av} ปี`, pa = P.age;
+    const apx = fit(at, 500, .031 * W * pa.s, .78 * W);
+    ctx.font = font(500, apx); ctx.textAlign = 'center';
+    const ax = .5 * W + pa.x / 100 * W, ay = .915 * H + pa.y / 100 * H, aw = ctx.measureText(at).width;
+    ctx.fillText(at, ax, ay);
+    out.age = { x: (ax - aw / 2) / W, y: (ay - apx * .75) / H, w: aw / W, h: apx * 1.5 / H };
+  }
+  ctx.restore();
+  return out;
+}
+
+/* ---------- พรีวิว ---------- */
+function render() {
+  raf = 0;
+  if (!state.fontsReady) return; // รอฟอนต์ก่อนวาดครั้งแรก
+  const cv = $('cv'), z = SIZES[state.size], ar = z.w / z.h, dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const aw = Math.max(200, $('stage').clientWidth - 40);
+  let ch = Math.min(700, Math.max(380, innerHeight * .72)), cw = ch * ar;
+  if (cw > aw) { cw = aw; ch = cw / ar; }
+  cv.style.width = cw + 'px'; cv.style.height = ch + 'px';
+  const W = Math.round(cw * dpr), H = Math.round(ch * dpr);
+  if (cv.width !== W || cv.height !== H) { cv.width = W; cv.height = H; }
+  const c = cv.getContext('2d');
+  boxes = renderMemorial(c, W, H, state);
+  if (state.showBoxes) { // เส้นแนะนำวาดเฉพาะพรีวิว ไม่ลงไฟล์ส่งออก
+    c.save(); c.lineWidth = Math.max(1, W * .0025); c.setLineDash([W * .012, W * .008]);
+    for (const id of PARTS) {
+      const b = boxes[id]; if (!b) continue;
+      c.strokeStyle = id === state.sel ? '#e8760f' : 'rgba(80,80,80,.55)';
+      c.strokeRect(b.x * W, b.y * H, b.w * W, b.h * H);
+    }
+    c.restore();
+  }
+}
+
+/* ---------- ซิงก์ UI จาก state ---------- */
+const setVal = (el, v) => { if (el.value !== v) el.value = v; };
+function syncUI() {
+  const s = state, sel = s.sel, p = s.parts[sel], z = SIZES[s.size];
+  setVal($('fName'), s.name); setVal($('fBirth'), s.birth); setVal($('fDeath'), s.death); setVal($('fAge'), s.age);
+  $('fAge').placeholder = autoAge(s) ?? 'เช่น 75';
+  $('fileLabel').textContent = s.photo ? 'เปลี่ยนรูป (' + s.photoName + ')' : 'เลือกรูปผู้วายชนม์';
+  document.querySelectorAll('.sz').forEach(b => b.setAttribute('aria-pressed', b.dataset.k === s.size));
+  $('sizeInfo').textContent = `ไฟล์ที่ได้ ${z.w}×${z.h} พิกเซล`;
+  document.querySelectorAll('.fr').forEach(b => b.setAttribute('aria-pressed', +b.dataset.i === s.frame));
+  $('frameName').textContent = 'กรอบ: ' + FRAMES[s.frame].n;
+
+  document.querySelectorAll('.chip').forEach(b => {
+    b.setAttribute('aria-pressed', b.dataset.part === sel);
+    b.querySelector('use').setAttribute('href', s.parts[b.dataset.part].locked ? '#i-lock' : '#i-unlock');
+  });
+  document.querySelectorAll('.tab').forEach(b => {
+    b.setAttribute('aria-selected', b.dataset.part === sel);
+    b.tabIndex = b.dataset.part === sel ? 0 : -1;
+  });
+  const lb = $('lockBtn');
+  lb.setAttribute('aria-pressed', p.locked); lb.classList.toggle('or', p.locked);
+  lb.innerHTML = ic(p.locked ? 'i-lock' : 'i-unlock') + (p.locked ? 'ล็อค' : 'ปลดล็อค') + ` (${PNAME[sel]})`;
+  $('badges').innerHTML = PARTS.map(id => `<span class="bd">${ic(s.parts[id].locked ? 'i-lock' : 'i-unlock')} ${BADGE[id]}: ${s.parts[id].locked ? 'ล็อค' : 'ปลดล็อค'}</span>`).join('');
+
+  $('panelTitle').textContent = 'ตำแหน่งและขนาด' + TITLE[sel];
+  $('posBadge').innerHTML = ic(p.locked ? 'i-lock' : 'i-unlock') + ' ' + (p.locked ? (p.x === 0 && p.y === 0 ? 'ล็อคกึ่งกลาง' : 'ล็อคตำแหน่ง') : 'ปลดล็อคแล้ว');
+  $('unlockBtn').innerHTML = ic(p.locked ? 'i-unlock' : 'i-lock') + (p.locked ? 'ปลดล็อคเพื่อย้าย' : 'ล็อคตำแหน่ง');
+  const lx = $('lockXTgl'); lx.setAttribute('aria-pressed', p.lockX); lx.disabled = p.locked;
+  const ph = sel === 'photo';
+  $('scL').textContent = ph ? 'ขนาดรูป (ซูม)' : 'ขนาดตัวอักษร';
+  $('pxL').textContent = (ph ? 'รูป ' : 'ข้อความ ') + 'ซ้าย–ขวา (X)';
+  $('pyL').textContent = (ph ? 'รูป ' : 'ข้อความ ') + 'บน–ล่าง (Y)';
+  const R = RNG[sel];
+  const rows = [['sc', p.s, ph ? [.5, 6] : [.5, 2], .01, false, +p.s.toFixed(2)],
+    ['px', p.x, [-R, R], 1, p.locked || p.lockX, Math.round(p.x)],
+    ['py', p.y, [-R, R], 1, p.locked, Math.round(p.y)]];
+  for (const [k, v, [mn, mx], st, dis, shown] of rows) {
+    for (const t of ['R', 'N']) {
+      const el = $(k + t);
+      el.min = mn; el.max = mx; el.step = st; el.disabled = dis;
+      if (t === 'R') el.value = v; else if (document.activeElement !== el) el.value = shown;
+    }
+  }
+  $('frameCard').hidden = !ph;
+  $('fsR').value = s.frameScale; if (document.activeElement !== $('fsN')) $('fsN').value = +s.frameScale.toFixed(2);
+  $('guideTgl').setAttribute('aria-pressed', s.showBoxes);
+  $('cv').style.touchAction = p.locked ? 'auto' : 'none';
+  $('cv').style.cursor = p.locked ? 'pointer' : 'grab';
+  const eb = $('exportBtn'); eb.disabled = s.busy;
+  eb.innerHTML = ic('i-dl') + `บันทึกไฟล์พร้อมพิมพ์ (${z.l}), 300dpi`;
+  $('status').textContent = s.msg;
+}
+
+/* ---------- ลากบนพรีวิว ---------- */
+let drag = null;
+function hit(fx, fy) {
+  for (const id of ['age', 'dates', 'name', 'photo']) {
+    const b = boxes[id];
+    if (b && fx >= b.x && fx <= b.x + b.w && fy >= b.y && fy <= b.y + b.h) return id;
+  }
+  return null;
+}
+function bindCanvas() {
+  const cv = $('cv');
+  cv.addEventListener('pointerdown', e => {
+    const r = cv.getBoundingClientRect(), fx = (e.clientX - r.left) / r.width, fy = (e.clientY - r.top) / r.height;
+    const id = hit(fx, fy); if (!id) return;
+    if (id !== state.sel) setState({ sel: id });
+    const p = state.parts[id]; if (p.locked) return; // ส่วนที่ล็อคอยู่ เลือกได้แต่ลากไม่ได้
+    drag = { id, fx, fy, x: p.x, y: p.y };
+    cv.setPointerCapture(e.pointerId);
+  });
+  cv.addEventListener('pointermove', e => {
+    if (!drag) return;
+    const r = cv.getBoundingClientRect(), dx = (e.clientX - r.left) / r.width - drag.fx, dy = (e.clientY - r.top) / r.height - drag.fy;
+    const p = state.parts[drag.id], ph = drag.id === 'photo', b = boxes.photo;
+    const patch = { y: clampPart(drag.id, 'y', drag.y + (ph ? dy / b.h : dy) * 100) };
+    if (!p.lockX) patch.x = clampPart(drag.id, 'x', drag.x + (ph ? dx / b.w : dx) * 100);
+    setPart(drag.id, patch);
+  });
+  const end = () => { drag = null; };
+  cv.addEventListener('pointerup', end); cv.addEventListener('pointercancel', end);
+}
+
+/* ---------- เลือกรูป ---------- */
+async function loadPhoto(file) {
+  if (!file) return;
+  if (!/^image\//.test(file.type)) { setState({ msg: 'กรุณาเลือกไฟล์รูปภาพ' }); return; }
+  try {
+    let img;
+    try { img = await createImageBitmap(file); } // ประมวลผลในเครื่อง ไม่อัปโหลด
+    catch (e) {
+      img = await new Promise((ok, no) => {
+        const i = new Image(), u = URL.createObjectURL(file);
+        i.onload = () => { URL.revokeObjectURL(u); ok(i); }; i.onerror = no; i.src = u;
+      });
+    }
+    const lk = state.parts.photo.locked;
+    setState({ photo: img, photoName: file.name, msg: '', parts: { ...state.parts, photo: { ...defPart(), locked: lk } } });
+  } catch (e) { setState({ msg: 'เปิดไฟล์รูปนี้ไม่ได้ ลองใช้ JPG หรือ PNG' }); }
+}
+
+/* ---------- ส่งออก PNG 300dpi ---------- */
+const CRC = (() => { const t = []; for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+const crc32 = u => { let c = -1; for (const b of u) c = CRC[(c ^ b) & 255] ^ (c >>> 8); return (~c) >>> 0; };
+// ใส่ chunk pHYs (300dpi = 11811 พิกเซล/เมตร) หลัง IHDR เพื่อให้โปรแกรมพิมพ์อ่านค่า dpi ได้ถูกต้อง
+function withDpi(buf, dpi) {
+  const ppm = Math.round(dpi / .0254), src = new Uint8Array(buf), ch = new Uint8Array(21), dv = new DataView(ch.buffer);
+  dv.setUint32(0, 9); ch.set([0x70, 0x48, 0x59, 0x73], 4); dv.setUint32(8, ppm); dv.setUint32(12, ppm); ch[16] = 1;
+  dv.setUint32(17, crc32(ch.subarray(4, 17)));
+  const out = new Uint8Array(src.length + 21);
+  out.set(src.subarray(0, 33)); out.set(ch, 33); out.set(src.subarray(33), 54);
+  return out;
+}
+async function exportPng() {
+  if (state.busy) return;
+  setState({ busy: true, msg: 'กำลังสร้างไฟล์…' });
+  try {
+    await loadFonts(); // รอฟอนต์ทุกน้ำหนักก่อนวาดไฟล์จริง
+    const z = SIZES[state.size], c = document.createElement('canvas');
+    c.width = z.w; c.height = z.h;
+    renderMemorial(c.getContext('2d'), z.w, z.h, state); // ไม่มีเส้นแนะนำ จึงตรงกับพรีวิว
+    const blob = await new Promise(r => c.toBlob(r, 'image/png'));
+    if (!blob) throw new Error('เบราว์เซอร์สร้างไฟล์ขนาดนี้ไม่ได้');
+    const url = URL.createObjectURL(new Blob([withDpi(await blob.arrayBuffer(), 300)], { type: 'image/png' }));
+    const a = document.createElement('a');
+    a.href = url; a.download = `memorial-${state.size}-300dpi.png`;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 4000);
+    setState({ busy: false, msg: `บันทึกแล้ว ${z.w}×${z.h} พิกเซล 300dpi` });
+  } catch (err) { setState({ busy: false, msg: 'บันทึกไม่สำเร็จ: ' + err.message }); }
+}
+
+/* ---------- เริ่มต้น ---------- */
+function init() {
+  $('sizes').innerHTML = Object.entries(SIZES).map(([k, v]) => `<button type="button" class="sz" data-k="${k}" aria-pressed="false">${v.l}</button>`).join('');
+  $('frames').innerHTML = FRAMES.map((f, i) => `<button type="button" class="fr" data-i="${i}" aria-pressed="false" aria-label="กรอบ ${f.n}"><canvas id="th${i}"></canvas></button>`).join('');
+  $('chips').innerHTML = PARTS.map(id => `<button type="button" class="chip" data-part="${id}" aria-pressed="false">${ic('i-lock')}${PNAME[id]}</button>`).join('');
+  FRAMES.forEach((f, i) => { // รูปย่อกรอบ ใช้ renderMemorial ตัวเดียวกัน
+    const c = $('th' + i), W = 132, H = 196; c.width = W; c.height = H;
+    renderMemorial(c.getContext('2d'), W, H, { ...initial(), frame: i, hideText: true });
+  });
+
+  $('file').addEventListener('change', e => { loadPhoto(e.target.files[0]); e.target.value = ''; });
+  $('fName').addEventListener('input', e => setState({ name: e.target.value }));
+  $('fBirth').addEventListener('input', e => setState({ birth: e.target.value }));
+  $('fDeath').addEventListener('input', e => setState({ death: e.target.value }));
+  $('fAge').addEventListener('input', e => setState({ age: e.target.value.replace(/\D/g, '').slice(0, 3) }));
+  $('sizes').addEventListener('click', e => { const b = e.target.closest('.sz'); if (b) setState({ size: b.dataset.k }); });
+  $('frames').addEventListener('click', e => { const b = e.target.closest('.fr'); if (b) setState({ frame: +b.dataset.i }); });
+  const pick = e => { const b = e.target.closest('[data-part]'); if (b) setState({ sel: b.dataset.part }); };
+  $('chips').addEventListener('click', pick); $('tabs').addEventListener('click', pick);
+
+  const toggleLock = () => setPart(state.sel, { locked: !state.parts[state.sel].locked });
+  const center = () => setPart(state.sel, { x: 0, y: 0 });
+  $('lockBtn').addEventListener('click', toggleLock); $('unlockBtn').addEventListener('click', toggleLock);
+  $('centerBtn').addEventListener('click', center); $('center2').addEventListener('click', center);
+  $('lockXTgl').addEventListener('click', () => setPart(state.sel, { lockX: !state.parts[state.sel].lockX }));
+  $('guideTgl').addEventListener('click', () => setState({ showBoxes: !state.showBoxes }));
+  // รีเซ็ต = คืนตำแหน่ง/ขนาด/ล็อค ทุกส่วน (ไม่ลบรูปและข้อมูลที่กรอก)
+  $('resetBtn').addEventListener('click', () => setState({ parts: freshParts(), frameScale: 1 }));
+
+  for (const [k, key] of [['sc', 's'], ['px', 'x'], ['py', 'y']]) {
+    for (const t of ['R', 'N']) {
+      $(k + t).addEventListener('input', e => {
+        const v = parseFloat(e.target.value); if (Number.isNaN(v)) return;
+        setPart(state.sel, { [key]: clampPart(state.sel, key, v) });
+      });
+    }
+  }
+  for (const t of ['R', 'N']) {
+    $('fs' + t).addEventListener('input', e => { const v = parseFloat(e.target.value); if (!Number.isNaN(v)) setState({ frameScale: clamp(v, .4, 1.1) }); });
+  }
+  $('exportBtn').addEventListener('click', exportPng);
+  bindCanvas();
+  window.addEventListener('resize', scheduleRender);
+
+  syncUI();
+  loadFonts().then(() => setState({ fontsReady: true }));
+}
+init();
+</script>
+</body>
+</html>

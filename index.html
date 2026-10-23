@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#f5f9fd">
+<title>MIX-IMAGE | HTML Archive — Real-Time Cloud Edition</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Thai:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./src/styles/main.css">
+</head>
+<body>
+<div class="app">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brandmark" aria-hidden="true">🤖</div>
+      <div>
+        <strong>MIX-IMAGE</strong>
+        <small>HTML Archive · Cloud Edition</small>
+      </div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="nav" aria-label="เมนูหลัก">
+      <button class="active" data-view="all">
+        <span class="ico">⌂</span><span>ภาพรวมคลังไฟล์</span>
+      </button>
+      <button data-view="all">
+        <span class="ico">▤</span><span>คลัง HTML ทั้งหมด</span>
+      </button>
+      <button data-view="favorites">
+        <span class="ico">☆</span><span>รายการโปรด</span>
+      </button>
+      <button id="addNav">
+        <span class="ico">＋</span><span>เพิ่มไฟล์ HTML</span>
+      </button>
+      <button id="migrationNav">
+        <span class="ico">⇄</span><span>ย้าย/นำเข้าข้อมูล (Migrate)</span>
+      </button>
+      <button id="configNav">
+        <span class="ico">⚙</span><span>ตั้งค่า Firebase</span>
+      </button>
+    </nav>
+
+    <!-- Side Categories -->
+    <div class="side-title">หมวดหมู่ในคลัง</div>
+    <div class="sidecats" id="sideCats" role="navigation" aria-label="หมวดหมู่"></div>
+
+    <!-- Storage & Cloud Connection Status -->
+    <div class="storage">
+      <div class="storagebox">
+        <div class="storage-head">
+          <span><i class="live-dot" id="liveDot"></i><span id="cloudStatusText">เชื่อมต่อคลาวด์</span></span>
+          <span id="storageMark">FIREBASE</span>
+        </div>
+        <p id="storageDesc">ซิงก์ข้อมูลแบบ Real-time ด้วย Cloud Firestore & Storage</p>
+        <div class="user-chip" id="userChip">
+          <span class="user-avatar" id="userAvatar">👤</span>
+          <div class="user-meta">
+            <span class="user-name" id="userName">กำลังโหลด...</span>
+            <span class="user-role" id="userRole">Viewer</span>
+          </div>
+        </div>
+        <div class="storage-actions">
+          <button class="mini-btn" id="authBtn">เข้าสู่ระบบ</button>
+          <button class="mini-btn" id="backupJsonBtn" title="ดาวน์โหลดสำรอง JSON จากคลาวด์">สำรอง JSON ↗</button>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Content Area -->
+  <main class="main">
+    <!-- Topbar -->
+    <div class="topbar">
+      <div>
+        <div class="eyebrow">MIX-IMAGE / REAL-TIME CLOUD VAULT</div>
+        <h1>คลังไฟล์ HTML ของลูกพี่</h1>
+      </div>
+      <div class="top-actions">
+        <span class="sync-badge" id="syncBadge" title="สถานะการซิงก์ข้อมูล">
+          <span class="pulse-dot"></span> Real-time Active
+        </span>
+        <button class="icon-btn" id="helpBtn" title="คู่มือการใช้งาน">?</button>
+        <button class="primary" id="addTop">＋ เพิ่มไฟล์ HTML</button>
+      </div>
+    </div>
+
+    <!-- Hero Section -->
+    <section class="hero">
+      <div class="hero-copy">
+        <div class="eyebrow">SAVE · DESCRIBE · REUSE · REAL-TIME CLOUD</div>
+        <h2>เก็บเครื่องมือไว้<br>หยิบมาใช้ซ้ำได้ทันที</h2>
+        <p>รวมไฟล์ HTML, Prompt Pack, เว็บเครื่องมือ และเทมเพลตไว้บน Cloud ปลอดภัยด้วย Firebase พร้อมพรีวิวแยกแซนด์บ็อกซ์ ค้นหา ดูตัวอย่าง และดาวน์โหลดกลับไปใช้ได้ทุกเครื่อง ทุกที่</p>
+        <div class="hero-pill">
+          <span>●</span><span id="heroPillText">CLOUD EDITION · ซิงก์เรียลไทม์ผ่าน Firestore & Cloud Storage</span>
+        </div>
+      </div>
+      <div class="hero-art" aria-hidden="true">
+        <div class="orb"><span>🗂️</span></div>
+      </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="stats" aria-label="สถิติคลังไฟล์">
+      <div class="stat">
+        <div class="stat-icon">▤</div>
+        <label>ไฟล์บนคลาวด์</label>
+        <strong id="statTotal">0</strong>
+      </div>
+      <div class="stat">
+        <div class="stat-icon">▧</div>
+        <label>หมวดหมู่</label>
+        <strong id="statCats">0</strong>
+      </div>
+      <div class="stat">
+        <div class="stat-icon">☆</div>
+        <label>รายการโปรด</label>
+        <strong id="statFav">0</strong>
+      </div>
+      <div class="stat">
+        <div class="stat-icon">☁</div>
+        <label>พื้นที่ไฟล์บนคลาวด์</label>
+        <strong id="statSize">0 KB</strong>
+      </div>
+    </section>
+
+    <!-- Categories Section -->
+    <div class="section-head">
+      <div>
+        <h3>หมวดหมู่ไฟล์</h3>
+        <p>เลือกประเภทเพื่อกรองไฟล์ที่ต้องการ</p>
+      </div>
+      <div class="sort-wrap">
+        <select class="sort" id="sortSelect" aria-label="การเรียงลำดับ">
+          <option value="newest">เรียง: อัปเดตล่าสุด ▾</option>
+          <option value="oldest">เรียง: เก่าสุดก่อน ▾</option>
+          <option value="name">เรียง: ชื่อไฟล์ ก–ฮ ▾</option>
+          <option value="size">เรียง: ขนาดไฟล์ใหญ่สุด ▾</option>
+        </select>
+      </div>
+    </div>
+    <section class="category-grid" id="categories" role="region" aria-label="หมวดหมู่หลัก"></section>
+
+    <!-- List Section Header -->
+    <div class="section-head">
+      <div>
+        <h3 id="listTitle">คลัง HTML ทั้งหมด</h3>
+        <p id="listSub">เปิดดูรายละเอียด แล้วดาวน์โหลดไฟล์ไปใช้ได้ทันที</p>
+      </div>
+    </div>
+
+    <!-- Search & Toolbar -->
+    <div class="toolbar">
+      <div class="search">
+        <span aria-hidden="true">⌕</span>
+        <input id="search" type="search" placeholder="ค้นหาชื่อไฟล์ คำอธิบาย แท็ก หรือหมวดหมู่..." autocomplete="off" aria-label="ค้นหาไฟล์">
+      </div>
+      <button class="filterbtn" id="customCoverFilter">▧ ภาพปกกำหนดเอง</button>
+      <span class="shown" id="shownCount" aria-live="polite">กำลังเชื่อมต่อ...</span>
+    </div>
+
+    <!-- Cards Grid -->
+    <section class="grid" id="grid" aria-live="polite">
+      <!-- Loading skeleton will render initially -->
+      <div class="skeleton-card"></div>
+      <div class="skeleton-card"></div>
+      <div class="skeleton-card"></div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+      MIX-IMAGE HTML ARCHIVE · Real-Time Cloud Edition · ขับเคลื่อนด้วย Firebase Firestore & Storage
+    </footer>
+  </main>
+</div>
+
+<!-- ========================================================================= -->
+<!-- MODALS -->
+<!-- ========================================================================= -->
+
+<!-- 1. Add / Edit File Modal -->
+<div class="modal-wrap" id="editWrap" role="dialog" aria-modal="true" aria-labelledby="editTitle">
+  <div class="modal">
+    <div class="modal-head">
+      <div>
+        <h3 id="editTitle">เพิ่มไฟล์ HTML สู่คลาวด์</h3>
+        <p>อัปโหลดไฟล์พร้อมชื่อ คำอธิบาย หมวดหมู่ และภาพปก เพื่อให้ค้นหาและหยิบมาใช้ซ้ำได้ง่าย</p>
+      </div>
+      <button class="close" data-close="editWrap" aria-label="ปิด">×</button>
+    </div>
+    <form class="modal-body" id="editForm">
+      <div class="form-grid">
+        <!-- File upload zone -->
+        <div class="field full" id="fileUploadField">
+          <label for="htmlFiles">ไฟล์ HTML <span class="sub-label">(.html / .htm — ตรวจสอบแฮชและอัปโหลดขึ้น Cloud Storage)</span></label>
+          <div class="upload-zone" id="dropZone">
+            <div class="upload-zone-icon">📄</div>
+            <div class="upload-zone-text">ลากไฟล์มาวางที่นี่ หรือกดเลือกไฟล์จากเครื่อง</div>
+            <input type="file" id="htmlFiles" accept=".html,.htm,text/html">
+          </div>
+          <div class="smallnote" id="fileSelectInfo">ระบบจะดึงชื่อจาก &lt;title&gt; และคำอธิบายจาก meta description ให้อัตโนมัติ</div>
+        </div>
+
+        <!-- Title -->
+        <div class="field full">
+          <label for="titleInput">ชื่อที่แสดง <span class="required">*</span></label>
+          <input id="titleInput" maxlength="200" required placeholder="เช่น STREET • RIDE • DRIFT หรือ เครื่องมือทำภาพหน้างานศพ">
+        </div>
+
+        <!-- Category -->
+        <div class="field">
+          <label for="categoryInput">หมวดหมู่ <span class="required">*</span></label>
+          <input id="categoryInput" list="categoryChoices" maxlength="60" required placeholder="เลือกหรือพิมพ์หมวดหมู่ใหม่">
+          <datalist id="categoryChoices">
+            <option value="Prompt Pack">
+            <option value="เครื่องมือออกแบบ">
+            <option value="เว็บแอป">
+            <option value="เทมเพลต">
+            <option value="อื่น ๆ">
+          </datalist>
+        </div>
+
+        <!-- Visibility -->
+        <div class="field">
+          <label for="visibilitySelect">ระดับการมองเห็น</label>
+          <select id="visibilitySelect">
+            <option value="public">สาธารณะ (เปิดดูได้ทุกคน)</option>
+            <option value="private">ส่วนตัว (เฉพาะฉันและผู้ดูแลระบบ)</option>
+          </select>
+        </div>
+
+        <!-- Description -->
+        <div class="field full">
+          <label for="descInput">คำอธิบายรายละเอียด</label>
+          <textarea id="descInput" maxlength="1500" placeholder="บันทึกว่าไฟล์นี้ใช้ทำอะไร มีจุดเด่นอะไร มีพรอมต์อะไรบ้าง และเหมาะกับสถานการณ์ไหน"></textarea>
+        </div>
+
+        <!-- Tags -->
+        <div class="field full">
+          <label for="tagsInput">แท็ก (คั่นด้วยจุลภาค ,)</label>
+          <input id="tagsInput" maxlength="300" placeholder="GPT Image, Prompt, เครื่องมือ, Canvas, Street Art">
+        </div>
+
+        <!-- Personal Notes -->
+        <div class="field full">
+          <label for="notesInput">โน้ตส่วนตัว / วิธีเปิดใช้งาน</label>
+          <textarea id="notesInput" maxlength="3000" placeholder="เช่น ต้องใส่ API Key อะไร วิธีปรับขนาดภาพ หรือคำแนะนำเฉพาะตัว"></textarea>
+        </div>
+
+        <!-- Cover Image Upload -->
+        <div class="field full">
+          <label for="coverInput">ภาพปกกำหนดเอง (ไม่บังคับ)</label>
+          <input id="coverInput" type="file" accept="image/*">
+          <div class="cover-preview-wrap">
+            <img id="coverPreview" class="cover-preview" alt="ตัวอย่างภาพปก" hidden>
+          </div>
+          <div class="smallnote">หากไม่ระบุภาพปก ระบบจะสร้างภาพปก SVG ที่สวยงามให้อัตโนมัติตามหมวดหมู่</div>
+        </div>
+
+        <!-- Progress Bar for Uploads -->
+        <div class="field full upload-progress-wrap" id="uploadProgressWrap" hidden>
+          <label>กำลังอัปโหลดขึ้น Firebase Cloud Storage...</label>
+          <div class="progress-bar-bg">
+            <div class="progress-bar-fill" id="uploadProgressFill" style="width: 0%"></div>
+          </div>
+          <span class="progress-text" id="uploadProgressText">0%</span>
+        </div>
+      </div>
+
+      <div class="form-foot">
+        <div class="hint" id="formHint">ไฟล์และข้อมูลจะถูกส่งขึ้น Cloud Storage & Firestore โดยตรง ปลอดภัยและซิงก์ทุกอุปกรณ์</div>
+        <div class="form-foot-actions">
+          <button type="button" class="secondary" data-close="editWrap">ยกเลิก</button>
+          <button type="submit" class="savebtn" id="saveBtn">บันทึกลงคลาวด์</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- 2. Isolated Sandboxed Preview Modal -->
+<div class="modal-wrap" id="previewWrap" role="dialog" aria-modal="true" aria-labelledby="previewTitle">
+  <div class="modal wide">
+    <div class="modal-head">
+      <div>
+        <div class="badge orange" id="sandboxShield">🔒 Sandboxed Isolated Runtime</div>
+        <h3 id="previewTitle">ตัวอย่างไฟล์</h3>
+        <p id="previewDesc">รันในสภาพแวดล้อมแซนด์บ็อกซ์ที่ถูกแยกอิสระ (Opaque Origin) ไม่สามารถเข้าถึงข้อมูลแอปหลัก</p>
+      </div>
+      <button class="close" data-close="previewWrap" aria-label="ปิด">×</button>
+    </div>
+    <div class="preview-tools">
+      <span id="previewFilename">กำลังโหลด...</span>
+      <div class="preview-head-actions">
+        <button class="secondary" id="openNewTab">เปิดแท็บแยก (Safe Sandbox) ↗</button>
+        <button class="secondary" id="downloadPreview">ดาวน์โหลดไฟล์ต้นฉบับ ↓</button>
+      </div>
+    </div>
+    <!-- Strict iframe sandbox: allow-scripts ONLY (NO allow-same-origin, NO allow-top-navigation) -->
+    <iframe class="preview-frame" id="previewFrame" title="ตัวอย่างไฟล์ HTML ปลอดภัย" sandbox="allow-scripts"></iframe>
+  </div>
+</div>
+
+<!-- 3. Migration & Bulk Importer Modal -->
+<div class="modal-wrap" id="migrationWrap" role="dialog" aria-modal="true" aria-labelledby="migrationTitle">
+  <div class="modal">
+    <div class="modal-head">
+      <div>
+        <h3 id="migrationTitle">ย้ายข้อมูลสู่ Firebase Cloud (Migration Tool)</h3>
+        <p>นำเข้าไฟล์ HTML เดิม และสำรองข้อมูล JSON จาก IndexedDB ขึ้นสู่คลาวด์อย่างปลอดภัย พร้อมตรวจจับไฟล์ซ้ำ (SHA-256)</p>
+      </div>
+      <button class="close" data-close="migrationWrap" aria-label="ปิด">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="migration-tabs">
+        <button class="migration-tab active" id="tabJsonMigrate">1. นำเข้าจาก JSON Backup</button>
+        <button class="migration-tab" id="tabHtmlMigrate">2. นำเข้าไฟล์ HTML โดยตรง</button>
+        <button class="migration-tab" id="tabSeedMigrate">3. โหลดชุดตัวอย่างเริ่มต้น 4 ไฟล์</button>
+      </div>
+
+      <!-- Tab 1: JSON Backup -->
+      <div id="paneJsonMigrate" class="migration-pane">
+        <p class="section-desc">เลือกไฟล์สำรองข้อมูล JSON (เช่น <code>MIX-IMAGE-HTML-Archive-Backup-*.json</code>) ที่เคยดาวน์โหลดไว้</p>
+        <div class="upload-zone">
+          <input type="file" id="jsonBackupInput" accept=".json,application/json">
+        </div>
+        <button class="primary full-width" id="startJsonMigrateBtn" style="margin-top: 14px;">เริ่มย้ายข้อมูลขึ้นคลาวด์ ↗</button>
+      </div>
+
+      <!-- Tab 2: Loose HTML Files -->
+      <div id="paneHtmlMigrate" class="migration-pane" hidden>
+        <p class="section-desc">เลือกไฟล์ .html ได้หลายไฟล์พร้อมกัน ระบบจะสกัด Metadata, คำนวณ SHA-256 และอัปโหลดขึ้น Storage</p>
+        <div class="upload-zone">
+          <input type="file" id="batchHtmlInput" accept=".html,.htm" multiple>
+        </div>
+        <button class="primary full-width" id="startHtmlMigrateBtn" style="margin-top: 14px;">เริ่มอัปโหลดไฟล์ HTML สู่คลาวด์ ↗</button>
+      </div>
+
+      <!-- Tab 3: Quick Seed Samples -->
+      <div id="paneSeedMigrate" class="migration-pane" hidden>
+        <p class="section-desc">ระบบจะทำการนำเข้าไฟล์ตัวอย่างเริ่มต้น 4 รายการที่มาพร้อมแพ็กเกจ (STREET-RIDE-DRIFT, สำเนาสำหรับทดสอบไฟล์ซ้ำ, เครื่องมือทำภาพหน้างานศพ, และตามหากันจนเจอ ชิบิ 80 ภาพ) ขึ้นสู่ Firebase Cloud ของคุณโดยตรงในคลิกเดียว</p>
+        <div style="background: #fdf8ef; border: 1px solid #fae2b8; border-radius: 12px; padding: 12px; font-size: 11.5px; color: #875417; margin-bottom: 14px;">
+          💡 <b>หมายเหตุ:</b> ไฟล์ตัวอย่างจะถูกแฮช SHA-256 และอัปโหลดขึ้น Storage พร้อมจัดหมวดหมู่และแท็กให้อัตโนมัติ
+        </div>
+        <button class="primary full-width" id="startSeedBtn">⚡ ติดตั้งไฟล์ตัวอย่างเริ่มต้น 4 รายการทันที ↗</button>
+      </div>
+
+      <!-- Migration Progress Display -->
+      <div class="migration-progress" id="migrationProgress" hidden>
+        <div class="progress-bar-bg">
+          <div class="progress-bar-fill" id="migrationBarFill" style="width: 0%"></div>
+        </div>
+        <div class="migration-status-text" id="migrationStatusText">กำลังเตรียมการ...</div>
+      </div>
+
+      <!-- Migration Report View -->
+      <div class="migration-report" id="migrationReport" hidden>
+        <h4>รายงานผลการย้ายข้อมูล (Migration Audit Report)</h4>
+        <div class="report-stats">
+          <span class="badge green" id="reportSuccess">นำเข้าสำเร็จ: 0</span>
+          <span class="badge orange" id="reportDuplicates">ข้ามไฟล์ซ้ำ: 0</span>
+          <span class="badge" id="reportFailed">ล้มเหลว: 0</span>
+        </div>
+        <div class="report-details" id="reportDetails"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 4. Firebase Configuration Modal -->
+<div class="modal-wrap" id="configWrap" role="dialog" aria-modal="true" aria-labelledby="configTitle">
+  <div class="modal">
+    <div class="modal-head">
+      <div>
+        <h3 id="configTitle">⚙️ ตั้งค่าการเชื่อมต่อ Firebase</h3>
+        <p>ระบุ Firebase Project Credentials หรือเปิดใช้งาน Local Emulator</p>
+      </div>
+      <button class="close" data-close="configWrap" aria-label="ปิด">×</button>
+    </div>
+    <form class="modal-body" id="configForm">
+      <div class="form-grid">
+        <div class="field full">
+          <label for="cfgApiKey">API Key</label>
+          <input id="cfgApiKey" type="text" placeholder="AIzaSy...">
+        </div>
+        <div class="field">
+          <label for="cfgProjectId">Project ID</label>
+          <input id="cfgProjectId" type="text" placeholder="my-miximage-project">
+        </div>
+        <div class="field">
+          <label for="cfgAuthDomain">Auth Domain</label>
+          <input id="cfgAuthDomain" type="text" placeholder="my-miximage-project.firebaseapp.com">
+        </div>
+        <div class="field">
+          <label for="cfgStorageBucket">Storage Bucket</label>
+          <input id="cfgStorageBucket" type="text" placeholder="my-miximage-project.firebasestorage.app">
+        </div>
+        <div class="field">
+          <label for="cfgAppId">App ID</label>
+          <input id="cfgAppId" type="text" placeholder="1:123456789:web:abcdef">
+        </div>
+      </div>
+      <div class="emulator-toggle">
+        <label><input type="checkbox" id="cfgEmulatorCheck"> ใช้ Firebase Local Emulator (localhost:8080/9199)</label>
+      </div>
+      <div class="form-foot">
+        <button type="button" class="secondary" id="resetConfigBtn">คืนค่าเริ่มต้น</button>
+        <button type="submit" class="savebtn">บันทึกและเชื่อมต่อใหม่</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- 5. User Auth Modal -->
+<div class="modal-wrap" id="authWrap" role="dialog" aria-modal="true" aria-labelledby="authTitle">
+  <div class="modal small">
+    <div class="modal-head">
+      <div>
+        <h3 id="authTitle">เข้าสู่ระบบ MIX-IMAGE</h3>
+        <p>เพื่อจัดการไฟล์ เพิ่ม ลบ และแก้ไขข้อมูลในคลังคลาวด์</p>
+      </div>
+      <button class="close" data-close="authWrap" aria-label="ปิด">×</button>
+    </div>
+    <form class="modal-body" id="authForm">
+      <div class="field full">
+        <label for="authEmail">อีเมล</label>
+        <input id="authEmail" type="email" required placeholder="admin@miximage.app">
+      </div>
+      <div class="field full">
+        <label for="authPassword">รหัสผ่าน</label>
+        <input id="authPassword" type="password" required placeholder="••••••••">
+      </div>
+      <div class="auth-buttons">
+        <button type="submit" class="primary full-width" id="submitLoginBtn">เข้าสู่ระบบด้วยอีเมล</button>
+        <button type="button" class="secondary full-width" id="googleLoginBtn">เข้าสู่ระบบด้วย Google</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- 6. Help Modal -->
+<div class="modal-wrap" id="helpWrap" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+  <div class="modal">
+    <div class="modal-head">
+      <div>
+        <h3 id="helpTitle">วิธีใช้งานคลัง HTML Cloud Edition</h3>
+        <p>คู่มือการใช้งานระบบคลาวด์เรียลไทม์</p>
+      </div>
+      <button class="close" data-close="helpWrap" aria-label="ปิด">×</button>
+    </div>
+    <div class="modal-body help-content">
+      <p><b>1. บันทึกและซิงก์เรียลไทม์:</b> ทุกไฟล์ที่อัปโหลดจะถูกส่งขึ้น Google Cloud Storage และข้อมูลจะซิงก์ทันทีผ่าน Firestore บนทุกเครื่องที่เปิดหน้านี้อยู่</p>
+      <p><b>2. ตรวจจับไฟล์ซ้ำ (Deduplication):</b> ระบบคำนวณ SHA-256 Hash ของไฟล์ HTML ก่อนอัปโหลด หากมีไฟล์เนื้อหาเหมือนกันจะแจ้งเตือน ป้องกันการกินพื้นที่ซ้ำซ้อน</p>
+      <p><b>3. ความปลอดภัยแซนด์บ็อกซ์ (Sandbox Preview):</b> หน้าพรีวิวจะรันใน Iframe ที่แยก Origin ออกจากระบบหลัก ป้องกัน JavaScript ในไฟล์ HTML เข้าถึง Session หรือบัญชีของคุณ</p>
+      <p><b>4. ย้ายข้อมูลจากระบบเดิม:</b> สามารถกดที่เมนู <i>ย้าย/นำเข้าข้อมูล (Migrate)</i> เพื่อนำไฟล์สำรอง JSON หรือไฟล์ HTML เดิมขึ้นสู่ระบบคลาวด์ได้ในคลิกเดียว</p>
+    </div>
+  </div>
+</div>
+
+<!-- Toast Notifications -->
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<!-- Application Main Entry Script -->
+<script type="module" src="./src/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,199 @@
+rules_version = '2';
+
+/**
+ * MIX-IMAGE HTML Archive — Cloud Firestore Security Rules
+ * 
+ * Security Architecture Overview:
+ * 1. Default Deny: All document paths deny read and write by default.
+ * 2. Strict Authentication & Role-Based Access Control (RBAC):
+ *    - Unauthenticated users have public read-only access to categories and public HTML archives.
+ *    - Authenticated users own their created files, profiles, and favorites.
+ *    - Administrative authority is granted via verified Auth custom claims (token.admin == true)
+ *      or Firestore user document role ('admin').
+ * 3. Comprehensive Data Integrity & Validation:
+ *    - Enforced on both create and update operations to eliminate the Update Bypass vulnerability.
+ *    - Explicit size limits on strings, collections, and file payloads to defend against DoS / resource exhaustion.
+ *    - Immutability of ownership, creation timestamps, and cryptographic content hashes on update.
+ *    - Tamper-proof activity audit logging (append-only, immutable).
+ */
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // -------------------------------------------------------------------------
+    // Core Helper Functions
+    // -------------------------------------------------------------------------
+
+    /**
+     * Checks if the incoming request is authenticated.
+     */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /**
+     * Checks if the authenticated user matches the specified userId.
+     */
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    /**
+     * Checks if the document already exists in the database.
+     */
+    function isExistingDoc() {
+      return resource != null;
+    }
+
+    /**
+     * Verifies administrative status from trusted sources:
+     * 1. Firebase Auth custom claims (token.admin == true)
+     * 2. Firestore user role document (/users/{uid} data.role == 'admin')
+     */
+    function isAdmin() {
+      return isSignedIn() && (
+        request.auth.token.get('admin', false) == true ||
+        ('admin' in request.auth.token && request.auth.token.admin == true) ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin')
+      );
+    }
+
+    // -------------------------------------------------------------------------
+    // Domain Validator Functions: HTML Archive Files
+    // -------------------------------------------------------------------------
+
+    /**
+     * Validates that all required fields are provided on document creation.
+     */
+    function hasRequiredHtmlFileFields(data) {
+      return data.keys().hasAll([
+        'title',
+        'categoryId',
+        'originalFilename',
+        'htmlStoragePath',
+        'fileSize',
+        'contentHash',
+        'createdAt',
+        'updatedAt'
+      ]);
+    }
+
+    /**
+     * Validates domain data constraints, field types, and size limits for HTML archive items.
+     * Enforced across both create and update operations to prevent update bypass vulnerabilities.
+     */
+    function isValidHtmlFileFields(data) {
+      return data.title is string
+        && data.title.size() > 0
+        && data.title.size() <= 200
+        && data.fileSize is int
+        && data.fileSize > 0
+        && data.fileSize <= 15728640
+        && data.contentHash is string
+        && data.contentHash.size() == 64
+        && data.visibility in ['public', 'private']
+        && (!('categoryId' in data) || (data.categoryId is string && data.categoryId.size() > 0 && data.categoryId.size() <= 100))
+        && (!('originalFilename' in data) || (data.originalFilename is string && data.originalFilename.size() > 0 && data.originalFilename.size() <= 255))
+        && (!('htmlStoragePath' in data) || (data.htmlStoragePath is string && data.htmlStoragePath.size() > 0 && data.htmlStoragePath.size() <= 500))
+        && (!('description' in data) || (data.description is string && data.description.size() <= 2000))
+        && (!('tags' in data) || (data.tags is list && data.tags.size() <= 50))
+        && (!('notes' in data) || (data.notes is string && data.notes.size() <= 5000));
+    }
+
+    // -------------------------------------------------------------------------
+    // Collection: html_files
+    // -------------------------------------------------------------------------
+
+    match /html_files/{fileId} {
+      // Read: Public files are visible to everyone; private files are restricted to owner or admin
+      allow read: if resource.data.visibility == 'public'
+        || isOwner(resource.data.createdBy)
+        || isAdmin();
+
+      // Create: Authenticated creator with strictly validated fields and server timestamps
+      allow create: if isSignedIn()
+        && request.resource.data.createdBy == request.auth.uid
+        && hasRequiredHtmlFileFields(request.resource.data)
+        && isValidHtmlFileFields(request.resource.data)
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time;
+
+      // Update: Creator or admin can update; immutable fields (createdBy, createdAt, contentHash) are locked
+      allow update: if isSignedIn()
+        && (isOwner(resource.data.createdBy) || isAdmin())
+        && request.resource.data.createdBy == resource.data.createdBy
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.contentHash == resource.data.contentHash
+        && request.resource.data.updatedAt == request.time
+        && isValidHtmlFileFields(request.resource.data);
+
+      // Delete: Creator or admin only
+      allow delete: if isSignedIn()
+        && (isOwner(resource.data.createdBy) || isAdmin());
+    }
+
+    // -------------------------------------------------------------------------
+    // Collection: categories
+    // -------------------------------------------------------------------------
+
+    match /categories/{categoryId} {
+      // Public taxonomy metadata readable by anyone; modifications restricted to admins
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // -------------------------------------------------------------------------
+    // Collection: users & subcollection favorites
+    // -------------------------------------------------------------------------
+
+    match /users/{uid} {
+      // Read: Profile owner or admin
+      allow read: if isOwner(uid) || isAdmin();
+
+      // Create: Self-creation allowed; self-assigning 'admin' role is prohibited
+      allow create: if isOwner(uid)
+        && (!('role' in request.resource.data) || request.resource.data.role in ['viewer', 'editor']);
+
+      // Update: Owner can update their profile without changing role; admins can update any profile / role
+      allow update: if isOwner(uid)
+        ? (
+            (!('role' in request.resource.data) && !('role' in resource.data)) ||
+            (request.resource.data.role == resource.data.role)
+          )
+        : isAdmin();
+
+      // Delete: Administrative action only
+      allow delete: if isAdmin();
+
+      // Subcollection: User personal favorites
+      match /favorites/{fileId} {
+        allow read, write: if isOwner(uid);
+      }
+    }
+
+    // -------------------------------------------------------------------------
+    // Collection: activity_logs
+    // -------------------------------------------------------------------------
+
+    match /activity_logs/{logId} {
+      // Read: Admin audit trail inspection only
+      allow read: if isAdmin();
+
+      // Create: Signed-in user logging their own activity with server-matched timestamp
+      allow create: if isSignedIn()
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.timestamp == request.time;
+
+      // Immutability: Activity logs are append-only; cannot be updated or deleted
+      allow update, delete: if false;
+    }
+
+    // -------------------------------------------------------------------------
+    // Global Default Deny
+    // -------------------------------------------------------------------------
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

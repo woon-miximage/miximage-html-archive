@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ตามหากันจนเจอ – พรอมต์ GPT Image 2.5 ชุดชิบิ 80 ภาพ</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#eef3fa;--card:#fff;--ink:#0f1b2d;--mute:#52617a;--line:#d3dcea;--acc:#1d5fd1;--accInk:#fff;--box:#f3f7fd;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0a1424;--card:#101f38;--ink:#eaf1fb;--mute:#8fa3c0;--line:#1f3354;--acc:#e8b86a;--accInk:#1b1205;--box:#0b182c;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0a1424;--card:#101f38;--ink:#eaf1fb;--mute:#8fa3c0;--line:#1f3354;--acc:#e8b86a;--accInk:#1b1205;--box:#0b182c;color-scheme:dark}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.65 "IBM Plex Sans Thai","Noto Sans Thai",system-ui,sans-serif}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--bg);z-index:10}
+header{background:radial-gradient(55% 130% at 50% -25%,rgba(232,184,106,.38),transparent 62%),linear-gradient(#0d1c33,#0a1424);color:#eaf1fb;padding:48px 20px 34px;text-align:center}
+h1{font-size:clamp(26px,5vw,42px);line-height:1.25;margin:0 0 12px;font-weight:700}
+header p{max-width:62ch;margin:0 auto 6px;color:#b9c8e0}
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);border-bottom:1px solid var(--line);padding:10px 16px;display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;justify-content:center}
+button{font:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.tab{border:1px solid var(--line);background:transparent;color:var(--ink);padding:6px 14px;border-radius:999px}
+.tab[aria-pressed="true"]{background:var(--acc);color:var(--accInk);border-color:var(--acc)}
+.bar label{font-size:14px;color:var(--mute);display:flex;gap:6px;align-items:center}
+.all{border:1px solid var(--acc);background:transparent;color:var(--ink);padding:6px 14px;border-radius:8px}
+main{max-width:1200px;margin:0 auto;padding:20px 16px 48px;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,340px),1fr));gap:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.top{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+h2{font-size:18px;margin:0;line-height:1.3}
+.en{color:var(--mute);font-size:14px}
+.id{color:var(--mute);font-size:13px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips span{border:1px solid var(--line);border-radius:6px;padding:1px 8px;font-size:13px;color:var(--mute)}
+pre{margin:0;white-space:pre-wrap;word-break:break-word;font:inherit;font-size:14px;line-height:1.6;background:var(--box);border:1px solid var(--line);border-radius:8px;padding:12px;max-height:260px;overflow:auto}
+.cp{align-self:flex-start;background:var(--acc);color:var(--accInk);border:0;border-radius:8px;padding:8px 16px;font-weight:500}
+@media (prefers-reduced-motion:no-preference){.cp,.tab{transition:background .15s}}
+.sep{flex-basis:100%;height:0}.grp{display:contents}
+.bar{gap:8px}
+</style>
+</head>
+<body>
+<header>
+<h1>ตามหากันจนเจอ<br>พรอมต์ GPT Image 2.5 ชุดชิบิ 80 ภาพ</h1>
+<p>ชิบิคู่หนึ่งตามหากันผ่านเมืองหม่นหมองสู่แสงสว่าง ชาย 25 หญิง 25 คู่ 30 ทุกภาพอัตราส่วน 3:2</p>
+<p>วิธีใช้: แนบภาพอ้างอิงในช่องภาพอ้างอิง แล้ววางพรอมต์ที่คัดลอก ชายไม่มีหนวดเครา หญิงใส่รองเท้าทุกภาพ</p>
+</header>
+<div class="bar" role="toolbar" aria-label="ตัวกรองและเครื่องมือ">
+<button class="tab k" data-k="*" aria-pressed="true">ทั้งหมด 80</button>
+<button class="tab k" data-k="M" aria-pressed="false">ชาย 25</button>
+<button class="tab k" data-k="F" aria-pressed="false">หญิง 25</button>
+<button class="tab k" data-k="C" aria-pressed="false">คู่ 30</button>
+<span class="sep"></span>
+<span class="grp" id="stg"></span>
+<span class="sep"></span>
+<label><input type="checkbox" id="ref" checked>ใส่ข้อความล็อกอัตลักษณ์จากภาพอ้างอิง</label>
+<button class="all" id="all">คัดลอกทั้งหมดที่แสดง</button>
+</div>
+<main id="main"></main>
+<script>
+const L={a:"24mm f/2.8 wide-angle lens, dynamic perspective",b:"35mm f/1.8 lens, natural storytelling perspective",c:"50mm f/1.4 lens, natural perspective",d:"85mm f/1.4 portrait lens, creamy bokeh",e:"135mm f/2 telephoto lens, compressed background, isolated subject",f:"14mm ultra-wide lens, epic scale",g:"100mm f/2.8 macro lens, tactile micro-detail"};
+const S={1:["ใกล้มาก","extreme close-up on face and eyes"],2:["โคลสอัพ","close-up, head and shoulders"],3:["ครึ่งตัวบน","medium close-up, chest up"],4:["ครึ่งตัว","medium shot, waist up"],5:["เหนือเข่า","cowboy shot, mid-thigh up"],6:["เต็มตัว","full-body shot"],7:["มุมกว้าง","wide shot, characters small within the environment"],8:["มุมต่ำ","low-angle hero shot"],9:["มุมสูง","high-angle shot looking down"],10:["จากด้านหลัง","over-the-shoulder shot from behind"],11:["มุมเอียง","Dutch-angle tilted shot"]};
+const ST=["เมืองหม่นหมอง","ออกตามหา","ร่องรอย","เฉียดผ่าน","พบกัน","สู่แสงสว่าง"];
+const CS=["cold desaturated gray-blue palette, oppressive gloom","cold teal-gray palette with a first faint hopeful accent","gray city with small warm amber hints of light","tense mix of cold gray-blue and warm amber, hope within reach","warm golden light breaking through the remaining gray","golden sunrise palette, luminous warm color replacing the gloom"];
+const REF={
+M:"Use the attached reference image as the identity anchor. Keep the face, age and chibi proportions of the boy exactly as in the reference, but clean-shaven: smooth face, no stubble, no mustache, no beard. Outfit unchanged: black knit beanie, dark sunglasses, small hoop earring, black oversized hoodie, plaid shirt tied at the waist, ripped black pants, chunky black sneakers. Do not redesign or beautify the face.",
+F:"Use the attached reference image as the identity anchor. Keep the face, age and chibi proportions of the girl exactly as in the reference: long black wavy hair, large dark eyes, soft rounded face, white lace-trimmed puff-sleeve dress. She always wears shoes (small white mary-jane shoes with lace-trimmed ankle socks), never barefoot. Do not redesign or beautify the face.",
+C:"Use the attached reference image as the identity anchor for both characters. Keep faces, ages and chibi proportions exactly as in the reference. Boy: clean-shaven with a smooth face (no stubble, mustache or beard), black knit beanie, dark sunglasses, hoop earring, black oversized hoodie, plaid shirt tied at the waist, ripped black pants, chunky black sneakers. Girl: long black wavy hair, large dark eyes, white lace-trimmed puff-sleeve dress, small white mary-jane shoes with lace-trimmed ankle socks, never barefoot. Do not redesign or beautify the faces."};
+const THEME="Story theme: two chibi companions searching for each other through a gloomy city, moving toward the light.";
+const STYLE="Style: premium 3D chibi collectible-figure render, Pixar-like soft subsurface skin, large glossy expressive eyes, stylized 2.5-head-tall proportions, detailed fabric weave and stitching, cinematic volumetric lighting, richly detailed cityscape environment, wide 3:2 landscape composition, crisp 8K detail.";
+const NEG="Avoid: text, logos, watermark, extra fingers, deformed hands, altered faces, beard, stubble, barefoot, realistic adult proportions.";
+const SC={M:"the chibi boy, ",F:"the chibi girl, ",C:"the chibi boy and girl together; "};
+const D={
+M:`1|เมืองไร้สี|colorless city|standing small at the center of a vast gray crosswalk in a smog-filled city, dim towers all around, hands in pockets, head turning as he searches|thick gray smog, flat overcast light, desaturated palette with only his black outfit, faint rain mist, long wet-asphalt reflection|f|7
+1|ฝนไม่หยุด|unending rain|waiting under a bus-stop shelter at night in heavy rain, hood up, glancing at an empty seat beside him|rain sheets, flickering sodium streetlight, puddle ripples, cold teal and gray grade, breath fog|b|5
+1|สถานีร้าง|abandoned station|sitting alone on a dim subway platform bench with a vinyl record on his lap, empty tracks ahead|flickering fluorescent tubes, drifting dust, green-gray tint, long converging perspective lines|a|9
+1|ป้ายนีออนดับ|dead neon|walking past a row of broken neon signs on a rain-soaked street, one sign flickering weakly|sparking neon, wet reflections, steam from grates, blue-black shadows|c|6
+1|ว่างเปล่า|hollow|leaning against a graffiti wall in a gray alley, sunglasses reflecting a lifeless city|smoggy backlight, reflections in the lenses, falling ash-like particles, matte film grain|d|3
+2|เริ่มออกเดิน|setting out|stepping off a curb into a foggy avenue, beanie low, looking down the road ahead|low fog, headlight glows, slight motion blur of passing cars, cool gray-blue grade|b|6
+2|ตะโกนเรียก|calling out|cupping his hands around his mouth and calling across a hollow plaza as pigeons scatter|startled pigeons, echoing breath fog, wet stone reflections, cold side light|e|4
+2|เปิดทุกประตู|every door|pushing open a heavy rusted door in an empty corridor, searching the room beyond|dust rays, flickering bulb, long shadow on the floor, muted teal-brown palette|c|5
+2|ข้ามสะพาน|crossing the bridge|running across a steel bridge over a dark river in the rain, scanning both sides|rain streaks, motion blur on railings, city lights smeared on the water, cold cyan haze|a|6
+2|ไฟฉายในหมอก|flashlight in fog|standing at a rooftop edge above a gray maze of streets, sweeping a small flashlight beam through the fog|beam cutting volumetric haze, distant tiny windows, wind-blown hoodie|a|7
+2|แผนที่เปียกฝน|soaked map|studying a soaked paper map under a flickering lamp, rain dripping from his beanie|rain bokeh, flickering lamp glow, drop highlights on the paper, desaturated teal|d|2
+3|แผ่นเสียงแรก|first clue|picking up a faintly glowing vinyl record from wet pavement, warm light pulsing in its grooves|first warm amber glow in a gray world, light ripples in puddles, floating sparkles|g|3
+3|เสียงเพลงไกลๆ|distant melody|stopping mid-step and tilting his head, hearing a faint melody drift between buildings|faint musical-note wisps, soft amber haze breaking the gray fog|c|4
+3|รอยเท้าแสง|trail of light|following a trail of tiny glowing footprints across a gray plaza|glowing footprint trail, warm points reflected in puddles, low mist|a|9
+3|ลูกไม้ปลิวมา|a scrap of white|catching a small scrap of white lace carried by the wind, eyes widening|floating lace and petals, warm backlight piercing the fog, frozen motion|e|3
+3|โน้ตบนเสาไฟ|note on the lamp post|reading a small handwritten note taped to a lamp post, a tiny drawn musical note on it|warm spot of lamp light, rain drops frozen mid-fall, subtle teal-amber contrast|d|3
+4|เดินสวนกัน|passing unseen|stepping onto a crowded crosswalk in the rain while a blurred white-dress figure passes behind him unseen|blurred umbrellas, long-exposure crowd streaks, one warm-lit white figure in the background|e|5
+4|รถไฟขบวนสุดท้าย|last train|running along a platform as a train pulls away, glimpsing a pale hand on a window|motion-blurred train, steam burst, warm window lights smearing|b|6
+4|เงาในกระจก|reflection|pressing a hand on a shop window, seeing a faint reflection of a white dress beyond|layered reflections, fogged glass, split warm and cool light|d|2
+4|ลิฟต์ปิดก่อน|closing lift|reaching toward a closing elevator door, a sliver of warm light inside, fingers just missing|narrow warm slit in a cold interior, motion blur, long corridor|c|4
+5|ได้ยินเสียงเรียก|hearing her voice|freezing mid-street and turning, eyes wide behind sunglasses, warm glow reaching his face from off-frame|golden rim light, drifting particles, rain turning to glimmers|d|3
+5|น้ำตาโล่งใจ|relieved tears|laughing with a tear sliding below the sunglasses frame as sunlight breaks through behind|macro tear highlight, golden bokeh, soft bloom|g|1
+6|แสงแรกของเช้า|first light|standing on a rooftop as clouds split and golden sunrise washes the city, lowering his sunglasses to see it|god rays, lens flare, warm gold grade replacing gray, glowing windows|f|8
+6|เมืองเปลี่ยนสี|city turns color|walking down a street where lamps switch on one by one, puddles reflecting warm gold|cascading warm lights, gold-reflecting puddles, light mist, soft vibrant grade|b|6
+6|ยิ้มใต้ฟ้าสว่าง|smiling in light|grinning with a guitar on his back, a glowing vinyl record floating beside him in a sunlit street|sun flare, floating glowing records, warm light dust, pastel gold|c|4`,
+F:`1|เมืองซีดจาง|faded city|standing small in a gray empty square among dim towers, hair lifting in cold wind, her white dress the only pale color|smog haze, flat overcast light, desaturated palette, drifting ash-like dust, faint reflection on wet stone|f|7
+1|ร่มใสกลางฝน|clear umbrella|walking alone along a rain-soaked street under a transparent umbrella, white shoes splashing|rain on the umbrella refracting neon, puddle splashes, cold blue-gray, bokeh|e|5
+1|ม้านั่งว่างข้างๆ|empty bench|sitting at a bus stop at night, hands in her lap, an empty seat beside her|sodium lamp flicker, rain curtain, breath fog, teal-gray grade|b|4
+1|กล่องดนตรีเงียบ|silent music box|holding a small music box that has stopped playing, standing in a gloomy alley|dim cold light, dust motes, one faint warm spark inside the box, deep shadows|g|3
+1|ตึกสูงกลืนกิน|swallowed by towers|looking up at looming dark skyscrapers from the street, tiny against them|extreme upward perspective, smog, rain streaks, cold gray-blue grade|a|8
+2|ก้าวแรก|first steps|stepping off the curb into a misty avenue, dress hem swaying, determination in her eyes|low fog, headlight glows, slight motion blur of cars, cool gray-blue|b|6
+2|เรียกชื่อ|calling his name|cupping her hands around her mouth in an empty plaza as her voice echoes and pigeons lift|startled pigeons, breath fog, wet stone reflections, cold side light|e|4
+2|ตะเกียงดวงน้อย|small lantern|walking through thick fog holding a small glowing paper lantern, searching ahead|warm circle of lantern light, volumetric fog, drifting rain, deep blue shadows|d|4
+2|วิ่งใต้สะพาน|under the overpass|running beneath a concrete overpass in the rain, looking left and right|rain streaks, headlight smears, motion blur, cold cyan tint|a|6
+2|ตลาดร้างยามค่ำ|empty market|weaving between shuttered market stalls in the dark, scanning every shadow|hanging bulbs flickering, drifting steam, warm sparks in cold blue haze|c|5
+2|ชานชาลาฝนพรำ|drizzling platform|peering down a long subway platform on tiptoe, clutching the music box|converging perspective lines, cold fluorescent glow, light drizzle, floor reflections|b|7
+3|กล่องดนตรีดังอีกครั้ง|the box plays|opening the music box as it begins to glow and chime again, astonished|warm amber light spilling on her face, floating note wisps, fog parting|g|2
+3|แผ่นเสียงส่องแสง|glowing record|crouching to touch a vinyl record glowing softly on wet pavement|amber glow in the grooves, light ripples in puddles, floating sparkles|d|3
+3|ตามรอยแสง|following the glow|following a thread of floating light particles between dark buildings|glowing particle ribbon, warm points in puddles, low mist|a|9
+3|ปิ๊กกีตาร์เรืองแสง|glowing guitar pick|picking up a tiny glowing guitar pick from a puddle and recognizing it|small gleam in her palm, ripples, warm bokeh|g|2
+3|เสียงกีตาร์ในหมอก|guitar echo|stopping on a dark street, listening to a faint electric guitar riff drifting through the fog|faint sound ribbons, amber haze breaking the gray fog, hair lifting|c|5
+4|สวนกันกลางฝูงชน|passing in the crowd|standing frozen as a crowd flows past, a blurred black-hooded figure vanishing behind her|long-exposure crowd streaks, rain, one warm highlight on the vanishing figure|e|5
+4|รถไฟออกไป|departing train|pressing her palm to a train window as it pulls away, glimpsing a black beanie on the platform|motion-blurred platform, steam burst, warm window glow smears|b|4
+4|เงาบนกระจก|window ghost|touching a rain-fogged shop window, a faint reflection of a black hoodie beyond|layered reflections, fogged glass, split warm and cool light|d|2
+4|วิ่งไล่รถราง|chasing the tram|chasing a tram through wet streets, shoes splashing, hand stretched out|tram taillight smears, splash droplets, warm lights, motion blur|a|6
+5|เห็นแสงไกลๆ|seeing him|turning toward a distant glow, eyes shining, hands rising to her mouth|golden rim light, drifting particles, rain turning to glimmers|d|3
+5|วิ่งเข้าหาแสง|running to him|starting to run toward a warm light, hair streaming, shoes splashing in a golden puddle|golden splash droplets, motion blur, warm bloom|c|6
+6|เมฆแหวก|clouds part|standing on a rooftop with arms open as clouds split and sunrise floods the city|god rays, lens flare, warm gold grade, glowing windows|f|8
+6|ถนนสีทอง|golden street|walking down a street where lamps turn on one by one, lantern held high|cascading warm lights, reflective golden puddles, soft mist|b|6
+6|ยิ้มกว้าง|radiant smile|smiling radiantly with the music box open and chiming, glowing vinyl records floating around her|sun flare, floating glowing records, light dust, pastel gold|d|3`,
+C:`1|ต่างคนต่างเหงา|alone together apart|standing at opposite ends of a vast gray avenue, tiny, facing away from each other, unaware|city smog, rain, desaturated palette, symmetrical composition, a faint warm vinyl glow between them|f|7
+1|คนละฝั่งถนน|opposite sidewalks|standing on opposite sidewalks of a rain-drenched street at night, both looking down|rain curtain between them, neon reflections, cold teal grade|e|7
+2|สองเส้นทาง|two paths|he walks a foggy overpass while she walks a rain-slick underpass, same city, same hurry, split composition|mirrored fog, cool gray palette, a faint thread of light linking the two halves|a|7
+2|เรียกแต่ไม่ได้ยิน|calling unheard|in the same plaza, he calls toward one side and she toward the other, backs almost touching, neither hears|echoing breath fog, rising pigeons, drizzle, back-to-back near contact|c|6
+2|ดาดฟ้าข้างกัน|neighboring rooftops|standing on two neighboring rooftops, he sweeping a flashlight and she raising a lantern across the skyline|crossing light beams in fog, volumetric haze, tiny windows|a|9
+2|สัญญาณที่หายไป|lost signal|he holds a glowing vinyl record to his ear while she holds the chiming music box, in adjacent alleys split by a wall|warm glow leaking through a brick seam, rain, mirrored composition|e|3
+3|เสียงเพลงข้ามหลังคา|melody across rooftops|stopping in separate streets as glowing sound ribbons from his guitar and her music box weave toward each other over rooftops|crossing ribbons of light in the sky, parting fog, amber against blue|a|8
+3|แสงสองสายบรรจบ|beams converge|walking toward a foggy square as his flashlight beam and her lantern beam cross above it|volumetric crossing beams, warm particles, wet stone mirror|b|7
+3|ร่องรอยของกันและกัน|each other trace|he finds her glowing lace scrap while she finds his glowing guitar pick, split by a sheet of rain|split composition, warm glows in cupped hands, rain sheet divider|g|2
+3|ช่องว่างระหว่างตึก|gaps between towers|walking toward each other on parallel streets, glimpsed through gaps between buildings, hopeful|warm slits of light between towers, mist, rim lighting|e|7
+3|ตามแผ่นเสียง|record trail|running toward the same glowing vinyl record trail from opposite ends of a long alley|glowing record trail, motion blur, warm points in puddles|a|6
+4|เฉียดไหล่|brushing shoulders|passing shoulder to shoulder in a dense rainy crowd, faces just turning away|long-exposure crowd streaks, sharp subjects, rain, two warm glows catching|e|5
+4|กระจกกั้นกลาง|glass between|facing each other through a rain-streaked glass wall of a station, hands raised, unable to find the door|condensation, rain streaks, split warm and cool light, doubled reflections|d|3
+4|บันไดเลื่อนสวนทาง|opposite escalators|riding opposite escalators in a gray station, reaching out as they pass|motion-blurred stairs, fluorescent glow, hair and hoodie lifting|a|11
+4|รถไฟคั่นกลาง|train between|standing on opposite platforms as a train rushes between them, glimpsing each other through the gaps|motion-streaked carriages, flickering light slices, steam|b|7
+4|เสียงก้องบนสะพาน|echo on the bridge|calling to each other from opposite ends of a long foggy bridge, voices rippling as visible light|glowing sound ripples in fog, bridge lamps, cold teal|a|7
+4|ปลายนิ้วที่พลาด|missed fingertips|his hand and her hand reaching through a closing gap between sliding doors, fingertips inches apart|warm sliver of light, extreme shallow depth, rain-fogged glass|g|1
+5|เห็นกันแล้ว|I see you|turning at the same moment in a quiet street, eyes meeting as the rain turns to sparkles|rain becoming glimmering particles, warm rim light, frozen motion|e|3
+5|วิ่งเข้าหากัน|running together|running toward each other across a golden-lit plaza, puddle splashes, wide smiles|golden splash droplets, motion blur, lens flare, warm bloom|b|6
+5|กอดแน่น|tight hug|hugging tightly in the middle of the street, his hoodie sleeves wrapped around her, eyes closed|warm halo of light, floating vinyl records, soft rain glints, shallow depth|d|3
+5|หน้าผากชนกัน|foreheads together|foreheads touching, both breathing out in relief, tears of joy|macro tear glint, soft golden glow between faces, bokeh|g|2
+5|ยกขึ้นหมุน|spin|he lifts her and spins her around as her dress flares, both laughing|spiraling light petals, motion blur, golden sun flare|c|6
+5|จับมือแน่น|holding on|their hands clasped tight at the center of the frame, the gray city blurred behind|warm light blooming around clasped hands, shallow depth, drifting sparks|g|2
+6|เดินเข้าหาแสง|toward the light|walking hand in hand toward a blinding sunrise at the end of a street, seen from behind|god rays, long shadows, light dust, gold grade replacing gray|b|7
+6|เมืองตื่นแล้ว|the city wakes|standing on a rooftop together as clouds split and light floods the skyline|sunrise flare, warm skyline glow, light mist, glowing windows|f|8
+6|เต้นรำกลางถนน|dancing in the street|slow dancing on a golden-lit street as floating vinyl records orbit them|golden floor reflections, orbiting records, soft bokeh|b|6
+6|คอนเสิร์ตแห่งแสง|concert of light|he plays guitar while she sings the music box melody on a sunlit rooftop|golden sound ribbons, lens flare, floating notes|c|4
+6|นั่งชมพระอาทิตย์|watching sunrise|sitting at a rooftop edge seen from behind, shoulders touching, watching the sun rise over the city|golden rim light, soft haze, warm sky gradient|b|10
+6|ลอยขึ้นด้วยกัน|floating up|floating together above the city holding hands, gray clouds turning gold below, vinyl records and a guitar drifting past|golden clouds, light beam from above, stardust, sparkle|a|7
+6|บ้านคือแสงสว่าง|home in light|facing the camera together, smiling and hugging, in a street flooded with warm golden light and glowing windows|golden hour glow, floating light dust, soft lens flare, crisp detail|d|4`};
+const items=[];
+for(const k of "MFC")D[k].split("\n").forEach((r,i)=>{const[st,t,en,sc,fx,l,s]=r.split("|");items.push({id:k+String(i+1).padStart(2,"0"),k,st:+st,t,en,sc,fx,l,s})});
+const text=(e,ref)=>[ref?REF[e.k]:"",THEME,"Scene: "+SC[e.k]+e.sc+".","Mood: "+e.en+".","Effects: "+e.fx+".","Color story: "+CS[e.st-1]+".","Camera: "+L[e.l]+"; framing: "+S[e.s][1]+"; aspect ratio 3:2 landscape.",STYLE,NEG].filter(Boolean).join("\n");
+let cur="*",cs="*";
+const main=document.getElementById("main"),refBox=document.getElementById("ref"),stg=document.getElementById("stg");
+async function copy(t,b){
+  let ok=false;
+  try{await navigator.clipboard.writeText(t);ok=true}catch(err){
+    const x=document.createElement("textarea");x.value=t;x.style.cssText="position:fixed;opacity:0";document.body.appendChild(x);x.select();
+    try{ok=document.execCommand("copy")}catch(e2){}x.remove();
+  }
+  b.dataset.o=b.dataset.o||b.textContent;
+  b.textContent=ok?"คัดลอกแล้ว":"คัดลอกไม่ได้ ลองเลือกข้อความเอง";
+  setTimeout(()=>{b.textContent=b.dataset.o},1600);
+}
+const shown=()=>items.filter(e=>(cur==="*"||e.k===cur)&&(cs==="*"||e.st===+cs));
+function el(tag,cls,txt){const n=document.createElement(tag);if(cls)n.className=cls;if(txt!=null)n.textContent=txt;return n}
+function render(){
+  main.textContent="";
+  shown().forEach(e=>{
+    const c=el("article","card"),top=el("div","top"),h=el("div");
+    h.append(el("h2","",e.t),el("div","en",e.en));
+    top.append(h,el("span","id",e.id));
+    const chips=el("div","chips");
+    [ST[e.st-1],L[e.l].split(" ")[0],S[e.s][0],"3:2"].forEach(x=>chips.append(el("span","",x)));
+    const pre=el("pre","",text(e,refBox.checked));
+    const b=el("button","cp","คัดลอกพรอมต์");
+    b.onclick=()=>copy(text(e,refBox.checked),b);
+    c.append(top,chips,pre,b);main.append(c);
+  });
+}
+function pick(sel,val,set){document.querySelectorAll(sel).forEach(x=>x.setAttribute("aria-pressed",x.dataset.k===val));set(val);render()}
+document.querySelectorAll(".tab.k").forEach(t=>t.onclick=()=>pick(".tab.k",t.dataset.k,v=>cur=v));
+["*",1,2,3,4,5,6].forEach(v=>{
+  const b=el("button","tab s",v==="*"?"ทุกช่วงเรื่อง":v+" "+ST[v-1]);b.dataset.k=String(v);b.setAttribute("aria-pressed",v==="*");
+  b.onclick=()=>pick(".tab.s",String(v),x=>cs=x);stg.append(b);
+});
+refBox.onchange=render;
+const allBtn=document.getElementById("all");
+allBtn.onclick=()=>copy(shown().map(e=>"### "+e.id+" "+e.en+"\n"+text(e,refBox.checked)).join("\n\n"),allBtn);
+render();
+</script>
+</body>
+</html>
