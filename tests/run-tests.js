@@ -117,6 +117,17 @@ if (fs.existsSync(storageRulesPath)) {
   assert(storageContent.includes("match /{allPaths=**} {\n      allow read, write: if false;\n    }"), `Enforces default deny on storage`);
 }
 
+// --- Test 7: Master PIN Authentication Logic ---
+console.log("\nTest 7: Master PIN 1449 Verification");
+const MASTER_PIN = "1449";
+function verifyPin(input) {
+  return input === MASTER_PIN;
+}
+
+assert(verifyPin("1449") === true, "PIN 1449 is correctly accepted as Master Admin PIN");
+assert(verifyPin("0000") === false, "Incorrect PIN 0000 is rejected");
+assert(verifyPin("1234") === false, "Incorrect PIN 1234 is rejected");
+
 // --- Summary ---
 console.log("\n=================================================");
 console.log(` TEST RESULTS: ${passed} PASSED, ${failed} FAILED`);

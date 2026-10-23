@@ -7,12 +7,14 @@ import { getFirebaseInstance } from "./services/firebase-service.js";
 import { 
   initAuth, 
   subscribeAuth, 
+  loginWithPin,
   loginWithEmail, 
   loginWithGoogle, 
   loginAnonymously,
   logoutUser, 
   getCurrentUser, 
-  getCurrentUserProfile 
+  getCurrentUserProfile,
+  isPinAuthenticated
 } from "./services/auth-service.js";
 import {
   subscribeHtmlFiles,
@@ -835,16 +837,90 @@ $('#backupJsonBtn').addEventListener('click', () => {
   toast('ส่งออกไฟล์สำรอง JSON จากคลาวด์แล้ว');
 });
 
-// --- Auth Modal ---
+// --- Auth Modal & PIN Login ---
 function openAuthModal() {
   $('#authWrap').classList.add('show');
   document.body.style.overflow = 'hidden';
+  $('#pinInput').value = '';
+  setTimeout(() => $('#pinInput')?.focus(), 150);
 }
+
+// Auth Mode Tabs
+$('#tabPinAuth')?.addEventListener('click', () => {
+  $('#tabPinAuth').classList.add('active');
+  $('#tabEmailAuth').classList.remove('active');
+  $('#panePinAuth').hidden = false;
+  $('#paneEmailAuth').hidden = true;
+  $('#pinInput').value = '';
+  $('#pinInput')?.focus();
+});
+
+$('#tabEmailAuth')?.addEventListener('click', () => {
+  $('#tabEmailAuth').classList.add('active');
+  $('#tabPinAuth').classList.remove('active');
+  $('#paneEmailAuth').hidden = false;
+  $('#panePinAuth').hidden = true;
+});
+
+// PIN Keypad clicks
+$$('.pin-key[data-digit]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    if ($('#pinInput').value.length < 4) {
+      $('#pinInput').value += btn.dataset.digit;
+      if ($('#pinInput').value.length === 4) {
+        handlePinSubmit();
+      }
+    }
+  });
+});
+
+$('#pinClear')?.addEventListener('click', () => {
+  $('#pinInput').value = '';
+  $('#pinInput')?.focus();
+});
+
+$('#pinBack')?.addEventListener('click', () => {
+  $('#pinInput').value = $('#pinInput').value.slice(0, -1);
+  $('#pinInput')?.focus();
+});
+
+$('#pinInput')?.addEventListener('input', () => {
+  if ($('#pinInput').value.length === 4) {
+    handlePinSubmit();
+  }
+});
+
+$('#pinInput')?.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    handlePinSubmit();
+  }
+});
+
+async function handlePinSubmit() {
+  const pin = $('#pinInput').value.trim();
+  if (pin.length !== 4) {
+    toast('กรุณากรอกรหัส PIN 4 หลัก');
+    return;
+  }
+
+  try {
+    await loginWithPin(pin);
+    closeModal('authWrap');
+    toast('👑 ปลดล็อกสิทธิ์ Admin ด้วย PIN สำเร็จ!');
+  } catch (err) {
+    $('#pinInput').value = '';
+    $('#pinInput')?.focus();
+    toast(err.message || 'รหัส PIN ไม่ถูกต้อง');
+  }
+}
+
+$('#submitPinBtn')?.addEventListener('click', handlePinSubmit);
 
 $('#authBtn').addEventListener('click', () => {
   const user = getCurrentUser();
-  if (user) {
-    if (confirm(`ออกจากระบบจากบัญชี ${user.email || user.displayName || ''}?`)) {
+  const isPin = isPinAuthenticated();
+  if (user || isPin) {
+    if (confirm('ออกจากระบบและล็อคคลังไฟล์ใช่หรือไม่?')) {
       logoutUser().then(() => toast('ออกจากระบบแล้ว'));
     }
   } else {
@@ -852,7 +928,7 @@ $('#authBtn').addEventListener('click', () => {
   }
 });
 
-$('#authForm').addEventListener('submit', async (ev) => {
+$('#paneEmailAuth')?.addEventListener('submit', async (ev) => {
   ev.preventDefault();
   const email = $('#authEmail').value.trim();
   const password = $('#authPassword').value;

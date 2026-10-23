@@ -420,24 +420,60 @@
     <div class="modal-head">
       <div>
         <h3 id="authTitle">เข้าสู่ระบบ MIX-IMAGE</h3>
-        <p>เพื่อจัดการไฟล์ เพิ่ม ลบ และแก้ไขข้อมูลในคลังคลาวด์</p>
+        <p>ปลดล็อกสิทธิ์เพื่อเพิ่ม แก้ไข ลบ และจัดการคลังไฟล์</p>
       </div>
       <button class="close" data-close="authWrap" aria-label="ปิด">×</button>
     </div>
-    <form class="modal-body" id="authForm">
-      <div class="field full">
-        <label for="authEmail">อีเมล</label>
-        <input id="authEmail" type="email" required placeholder="admin@miximage.app">
+    <div class="modal-body">
+      <!-- Auth Mode Tabs -->
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="tabPinAuth">🔑 รหัส PIN (ด่วน)</button>
+        <button class="auth-tab" id="tabEmailAuth">✉️ อีเมล / Google</button>
       </div>
-      <div class="field full">
-        <label for="authPassword">รหัสผ่าน</label>
-        <input id="authPassword" type="password" required placeholder="••••••••">
+
+      <!-- Pane 1: PIN Login -->
+      <div id="panePinAuth" class="auth-pane">
+        <p class="section-desc" style="text-align: center; margin-bottom: 12px;">กดหรือพิมพ์รหัส PIN 4 หลักเพื่อเข้าสู่ระบบทันที</p>
+        
+        <div class="pin-box">
+          <input type="password" id="pinInput" maxlength="4" placeholder="••••" autocomplete="off" inputmode="numeric" autofocus>
+        </div>
+
+        <!-- Keypad -->
+        <div class="pin-keypad">
+          <button type="button" class="pin-key" data-digit="1">1</button>
+          <button type="button" class="pin-key" data-digit="2">2</button>
+          <button type="button" class="pin-key" data-digit="3">3</button>
+          <button type="button" class="pin-key" data-digit="4">4</button>
+          <button type="button" class="pin-key" data-digit="5">5</button>
+          <button type="button" class="pin-key" data-digit="6">6</button>
+          <button type="button" class="pin-key" data-digit="7">7</button>
+          <button type="button" class="pin-key" data-digit="8">8</button>
+          <button type="button" class="pin-key" data-digit="9">9</button>
+          <button type="button" class="pin-key action" id="pinClear">ล้าง</button>
+          <button type="button" class="pin-key" data-digit="0">0</button>
+          <button type="button" class="pin-key action" id="pinBack">⌫</button>
+        </div>
+
+        <button type="button" class="primary full-width" id="submitPinBtn" style="margin-top: 14px;">เข้าสู่ระบบด้วย PIN ➔</button>
       </div>
-      <div class="auth-buttons">
-        <button type="submit" class="primary full-width" id="submitLoginBtn">เข้าสู่ระบบด้วยอีเมล</button>
-        <button type="button" class="secondary full-width" id="googleLoginBtn">เข้าสู่ระบบด้วย Google</button>
-      </div>
-    </form>
+
+      <!-- Pane 2: Email & Google Login -->
+      <form id="paneEmailAuth" class="auth-pane" hidden>
+        <div class="field full">
+          <label for="authEmail">อีเมล</label>
+          <input id="authEmail" type="email" placeholder="admin@miximage.app">
+        </div>
+        <div class="field full">
+          <label for="authPassword">รหัสผ่าน</label>
+          <input id="authPassword" type="password" placeholder="••••••••">
+        </div>
+        <div class="auth-buttons">
+          <button type="submit" class="primary full-width" id="submitLoginBtn">เข้าสู่ระบบด้วยอีเมล</button>
+          <button type="button" class="secondary full-width" id="googleLoginBtn">เข้าสู่ระบบด้วย Google</button>
+        </div>
+      </form>
+    </div>
   </div>
 </div>
 

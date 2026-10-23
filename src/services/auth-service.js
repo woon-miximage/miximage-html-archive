@@ -1,6 +1,6 @@
 /**
  * Authentication Service for MIX-IMAGE HTML Archive
- * Handles Firebase Authentication, User Roles, and Session State
+ * Handles Firebase Authentication, User Roles, PIN Code Login (1449), and Session State
  */
 
 import {
@@ -17,6 +17,9 @@ import {
   setDoc,
   serverTimestamp
 } from "./firebase-service.js";
+
+const MASTER_PIN = "1449";
+const PIN_STORAGE_KEY = "miximage_pin_auth";
 
 let currentUser = null;
 let currentUserProfile = null;
@@ -42,44 +45,134 @@ function notifyAuthListeners() {
   }
 }
 
+export function isPinAuthenticated() {
+  try {
+    return sessionStorage.getItem(PIN_STORAGE_KEY) === MASTER_PIN;
+  } catch (_) {
+    return false;
+  }
+}
+
 export function initAuth() {
   const { auth, db } = getFirebaseInstance();
-  if (!auth) return;
+  const hasPinSession = isPinAuthenticated();
+
+  // If already authenticated by PIN in this session, restore immediately
+  if (hasPinSession) {
+    currentUserProfile = {
+      uid: "owner-master",
+      email: "owner@miximage.app",
+      displayName: "ลูกพี่ (PIN Master)",
+      role: "admin",
+      isPinMaster: true
+    };
+  }
+
+  if (!auth) {
+    notifyAuthListeners();
+    return;
+  }
 
   onAuthStateChanged(auth, async (user) => {
     currentUser = user;
+    const isPin = isPinAuthenticated();
+
     if (user) {
-      try {
-        const userRef = doc(db, "users", user.uid);
-        const userSnap = await getDoc(userRef);
-        if (userSnap.exists()) {
-          currentUserProfile = userSnap.data();
-        } else {
-          // Initialize new user profile document
-          currentUserProfile = {
-            uid: user.uid,
-            email: user.email || (user.isAnonymous ? "guest@miximage.app" : ""),
-            displayName: user.displayName || (user.isAnonymous ? "Guest Creator" : user.email?.split('@')[0]) || "User",
-            photoURL: user.photoURL || "",
-            role: "editor", // default role
-            createdAt: serverTimestamp()
-          };
-          await setDoc(userRef, currentUserProfile, { merge: true });
-        }
-      } catch (err) {
-        console.warn("Could not load/create user profile:", err);
+      if (isPin) {
+        // Enforce Admin role for PIN session
         currentUserProfile = {
           uid: user.uid,
-          email: user.email || "guest@miximage.app",
-          displayName: user.displayName || "User",
-          role: "editor"
+          email: user.email || "owner@miximage.app",
+          displayName: "ลูกพี่ (PIN Master)",
+          role: "admin",
+          isPinMaster: true
         };
+        try {
+          await setDoc(doc(db, "users", user.uid), currentUserProfile, { merge: true });
+        } catch (_) {}
+      } else {
+        try {
+          const userRef = doc(db, "users", user.uid);
+          const userSnap = await getDoc(userRef);
+          if (userSnap.exists()) {
+            currentUserProfile = userSnap.data();
+          } else {
+            currentUserProfile = {
+              uid: user.uid,
+              email: user.email || (user.isAnonymous ? "guest@miximage.app" : ""),
+              displayName: user.displayName || (user.isAnonymous ? "Guest Creator" : user.email?.split('@')[0]) || "User",
+              photoURL: user.photoURL || "",
+              role: "editor",
+              createdAt: serverTimestamp()
+            };
+            await setDoc(userRef, currentUserProfile, { merge: true });
+          }
+        } catch (err) {
+          currentUserProfile = {
+            uid: user.uid,
+            email: user.email || "user@miximage.app",
+            displayName: user.displayName || "User",
+            role: "editor"
+          };
+        }
       }
     } else {
-      currentUserProfile = null;
+      if (isPin) {
+        currentUser = { uid: "owner-master", email: "owner@miximage.app", displayName: "ลูกพี่ (PIN Master)" };
+        currentUserProfile = {
+          uid: "owner-master",
+          email: "owner@miximage.app",
+          displayName: "ลูกพี่ (PIN Master)",
+          role: "admin",
+          isPinMaster: true
+        };
+      } else {
+        currentUserProfile = null;
+      }
     }
     notifyAuthListeners();
   });
+}
+
+/**
+ * Log in using Master PIN Code (1449)
+ * Instantly grants Admin privileges and signs into Firebase session.
+ */
+export async function loginWithPin(pin) {
+  if (pin !== MASTER_PIN) {
+    throw new Error("รหัส PIN ไม่ถูกต้อง โปรดลองอีกครั้ง");
+  }
+
+  sessionStorage.setItem(PIN_STORAGE_KEY, MASTER_PIN);
+  const { auth, db } = getFirebaseInstance();
+
+  let user = auth?.currentUser;
+  if (!user && auth) {
+    try {
+      const cred = await signInAnonymously(auth);
+      user = cred.user;
+    } catch (e) {
+      console.warn("Anonymous auth fallback:", e.message);
+    }
+  }
+
+  currentUser = user || { uid: "owner-master", email: "owner@miximage.app", displayName: "ลูกพี่ (PIN Master)" };
+  currentUserProfile = {
+    uid: currentUser.uid,
+    email: currentUser.email || "owner@miximage.app",
+    displayName: "ลูกพี่ (PIN Master)",
+    role: "admin",
+    isPinMaster: true
+  };
+
+  if (db && user) {
+    try {
+      await setDoc(doc(db, "users", user.uid), currentUserProfile, { merge: true });
+    } catch (_) {}
+  }
+
+  notifyAuthListeners();
+  return currentUserProfile;
 }
 
 export async function loginWithEmail(email, password) {
@@ -115,8 +208,14 @@ export async function loginAnonymously() {
 }
 
 export async function logoutUser() {
+  try {
+    sessionStorage.removeItem(PIN_STORAGE_KEY);
+  } catch (_) {}
   const { auth } = getFirebaseInstance();
-  return signOut(auth);
+  if (auth) return signOut(auth);
+  currentUser = null;
+  currentUserProfile = null;
+  notifyAuthListeners();
 }
 
 export function getCurrentUser() {
@@ -128,5 +227,5 @@ export function getCurrentUserProfile() {
 }
 
 export function isAdminUser() {
-  return currentUserProfile?.role === 'admin';
+  return currentUserProfile?.role === "admin" || isPinAuthenticated();
 }
