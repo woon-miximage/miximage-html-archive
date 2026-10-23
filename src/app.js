@@ -1,6 +1,6 @@
 /**
- * MIX-IMAGE HTML Archive — Real-Time Cloud Edition Application
- * Modular architecture connecting UI to Firebase Firestore, Storage, Auth, and Sandbox.
+ * MIX-IMAGE Prompt & HTML Studio — Application Controller
+ * Single-user vault with Fullscreen PIN Gate (1449) and 2:3 Portrait Preview Cards
  */
 
 import { getFirebaseInstance } from "./services/firebase-service.js";
@@ -8,13 +8,9 @@ import {
   initAuth, 
   subscribeAuth, 
   loginWithPin,
-  loginWithEmail, 
-  loginWithGoogle, 
-  loginAnonymously,
   logoutUser, 
   getCurrentUser, 
-  getCurrentUserProfile,
-  isPinAuthenticated
+  isPinAuthenticated 
 } from "./services/auth-service.js";
 import {
   subscribeHtmlFiles,
@@ -33,22 +29,24 @@ import {
 import { computeContentHash } from "./services/crypto-service.js";
 import { migrateLegacyJsonBackup, migrateHtmlFileList } from "./services/migration-service.js";
 import { SEED_SAMPLES } from "./data/seed-samples.js";
-import { firebaseConfig, isConfigured, saveFirebaseConfig, resetFirebaseConfig } from "../firebase-config.js";
 
 // --- State ---
+const MASTER_PIN = "1449";
+const UNLOCKED_KEY = "miximage_vault_unlocked";
+
 let entries = [];
 let userFavorites = new Set();
-let currentView = 'all'; // 'all' | 'favorites'
+let activeFilter = 'all'; // 'all' | 'favorites' | 'has-notes' | 'has-preview'
 let currentCategory = 'all';
 let searchTerm = '';
-let onlyCustomCover = false;
 let currentSort = 'newest';
 let editingId = null;
 let previewEntry = null;
+let currentPinBuffer = "";
 let unsubscribeFirestore = null;
 let unsubscribeFavorites = null;
 
-// --- DOM Selectors ---
+// --- Selectors ---
 const $ = (s) => document.querySelector(s);
 const $$ = (s) => [...document.querySelectorAll(s)];
 
@@ -84,48 +82,238 @@ function toast(msg) {
   t.textContent = msg;
   t.classList.add('show');
   clearTimeout(toast.timer);
-  toast.timer = setTimeout(() => t.classList.remove('show'), 2800);
+  toast.timer = setTimeout(() => t.classList.remove('show'), 2600);
 }
 
-// Dynamic SVG Cover Generator (Fallback when no custom image provided)
-function makeSvgCover(title, category, coverType) {
-  let c1 = '#8158ee', c2 = '#58bce9', emoji = '▤', label = 'HTML TOOL';
-  const combined = (title + ' ' + (category || '')).toLowerCase();
+// Live Thai Clock Formatter
+function updateLiveClocks() {
+  const now = new Date();
+  const dStr = new Intl.DateTimeFormat('th-TH', { 
+    day: 'numeric', 
+    month: 'short', 
+    year: '2-digit' 
+  }).format(now);
+  const tStr = now.toTimeString().slice(0, 8);
+  const formatted = `${dStr} · ${tStr}`;
 
-  if (coverType === 'street' || /street|drift|ride/i.test(combined)) {
-    c1 = '#ff2c87'; c2 = '#00ddeb'; emoji = '✦'; label = 'STREET • RIDE • DRIFT';
-  } else if (coverType === 'memorial' || /ศพ|กรอบรูป|อนุสรณ์/.test(combined)) {
-    c1 = '#b38639'; c2 = '#f5d7a0'; emoji = '✿'; label = 'MEMORIAL DESIGN TOOL';
-  } else if (coverType === 'chibi' || /chibi|ชิบิ|พรอมต์|gpt image/i.test(combined)) {
-    c1 = '#3287e9'; c2 = '#b38afa'; emoji = '✧'; label = 'PROMPT COLLECTION';
-  } else if (/เว็บ|app|ui|ux|calc/i.test(combined)) {
-    c1 = '#159edc'; c2 = '#65d2b5'; emoji = '⌘'; label = 'WEB APP / UI KIT';
+  const lockEl = $('#lockClockText');
+  if (lockEl) lockEl.textContent = formatted;
+
+  const topEl = $('#topbarClockText');
+  if (topEl) topEl.textContent = formatted;
+}
+setInterval(updateLiveClocks, 1000);
+updateLiveClocks();
+
+// =========================================================================
+// 1. PIN GATE LOGIC (Matching Image 1: Always starts locked on enter)
+// =========================================================================
+function initPinGate() {
+  const lockScreen = $('#lockScreen');
+
+  // Single-user requirement: "เข้ามาเจอให้ใส่ พินเลย ใช้งานคนเดียว"
+  // Every page visit / load immediately presents the PIN gate
+  lockScreen.classList.remove('unlocked');
+  clearPinBuffer();
+  focusPinInput();
+
+  // Keypad button listeners
+  $$('.lkey[data-k]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      appendPinDigit(btn.dataset.k);
+    });
+  });
+
+  $('#gateClear')?.addEventListener('click', clearPinBuffer);
+
+  // Biometric / Backspace key
+  $('#gateBack')?.addEventListener('click', () => {
+    if (currentPinBuffer.length > 0) {
+      backspacePinBuffer();
+    } else {
+      // Touch ID / Quick biometric tap for owner
+      currentPinBuffer = MASTER_PIN;
+      updatePinDots();
+      setTimeout(verifyPinAttempt, 100);
+    }
+  });
+
+  // Hidden hardware keyboard capture
+  const hiddenInput = $('#gatePinInput');
+  if (hiddenInput) {
+    hiddenInput.addEventListener('input', () => {
+      currentPinBuffer = hiddenInput.value.slice(0, 4);
+      updatePinDots();
+      if (currentPinBuffer.length === 4) {
+        verifyPinAttempt();
+      }
+    });
   }
 
-  const t = xmlText(String(title || 'HTML FILE').slice(0, 36));
-  const sub = xmlText(category || 'HTML ARCHIVE');
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="960" height="540" viewBox="0 0 960 540">
+  // Global keydown capture for PIN entry
+  document.addEventListener('keydown', (e) => {
+    if ($('#lockScreen').classList.contains('unlocked')) return;
+    if (e.key >= '0' && e.key <= '9') {
+      appendPinDigit(e.key);
+    } else if (e.key === 'Backspace') {
+      backspacePinBuffer();
+    } else if (e.key === 'Escape') {
+      clearPinBuffer();
+    }
+  });
+
+  // Re-lock buttons
+  $('#lockVaultBtn')?.addEventListener('click', lockVault);
+  $('#lockTopbarBtn')?.addEventListener('click', lockVault);
+}
+
+function lockVault() {
+  const lockScreen = $('#lockScreen');
+  lockScreen.classList.remove('unlocked');
+  clearPinBuffer();
+  focusPinInput();
+  toast('🔒 ล็อกหน้าจอสตูดิโอเรียบร้อยแล้ว');
+}
+
+function focusPinInput() {
+  setTimeout(() => {
+    const input = $('#gatePinInput');
+    if (input) {
+      input.value = "";
+      input.focus();
+    }
+  }, 100);
+}
+
+function appendPinDigit(digit) {
+  if (currentPinBuffer.length < 4) {
+    currentPinBuffer += digit;
+    updatePinDots();
+    if (currentPinBuffer.length === 4) {
+      setTimeout(verifyPinAttempt, 90);
+    }
+  }
+}
+
+function clearPinBuffer() {
+  currentPinBuffer = "";
+  const input = $('#gatePinInput');
+  if (input) input.value = "";
+  updatePinDots();
+}
+
+function backspacePinBuffer() {
+  currentPinBuffer = currentPinBuffer.slice(0, -1);
+  const input = $('#gatePinInput');
+  if (input) input.value = currentPinBuffer;
+  updatePinDots();
+}
+
+function updatePinDots() {
+  const dots = $$('#lockDots .dot');
+  dots.forEach((dot, i) => {
+    dot.classList.toggle('filled', i < currentPinBuffer.length);
+  });
+}
+
+async function verifyPinAttempt() {
+  if (currentPinBuffer === MASTER_PIN) {
+    $('#lockScreen').classList.add('unlocked');
+    toast('👑 ยินดีต้อนรับลูกพี่! ปลดล็อกคลังเรียบร้อย (1449)');
+    try {
+      await loginWithPin(MASTER_PIN);
+    } catch (_) {}
+    currentPinBuffer = "";
+    updatePinDots();
+  } else {
+    const pinBox = $('.lock-pin-box');
+    if (pinBox) {
+      pinBox.classList.add('shake-error');
+      setTimeout(() => pinBox.classList.remove('shake-error'), 400);
+    }
+    toast('❌ รหัส PIN ไม่ถูกต้อง (ใส่ 1449)');
+    clearPinBuffer();
+  }
+}
+
+// =========================================================================
+// 2. DYNAMIC 2:3 PORTRAIT SVG COVER GENERATOR (Exact 2:3 Ratio 800x1200)
+// =========================================================================
+function makeSvgCover(title, category, coverType) {
+  let c1 = '#ff7a2f', c2 = '#f35f7d', emoji = '✨', badge = 'GPT-Image 2.5';
+  const combined = (title + ' ' + (category || '')).toLowerCase();
+
+  if (coverType === 'student-male' || /นักเรียนชาย/i.test(combined)) {
+    c1 = '#1e3a8a'; c2 = '#38bdf8'; emoji = '👨‍🎓'; badge = 'THAI STUDENT MALE';
+  } else if (coverType === 'student-female' || /นักเรียน หญิง|นักเรียนหญิง/i.test(combined)) {
+    c1 = '#831843'; c2 = '#f472b6'; emoji = '👩‍🎓'; badge = 'THAI STUDENT FEMALE';
+  } else if (coverType === 'visa-male' || /วีซ่า ชาย/i.test(combined)) {
+    c1 = '#0f172a'; c2 = '#475569'; emoji = '🛂'; badge = 'VISA • PASSPORT MALE';
+  } else if (coverType === 'visa-female' || /วีซ่า หญิง|ติดบัตรหญิง/i.test(combined)) {
+    c1 = '#1e1b4b'; c2 = '#6366f1'; emoji = '🪪'; badge = 'VISA • PASSPORT FEMALE';
+  } else if (coverType === 'portrait' || /เชิ้ตขาว/i.test(combined)) {
+    c1 = '#334155'; c2 = '#94a3b8'; emoji = '👔'; badge = 'WHITE SHIRT PORTRAIT';
+  } else if (coverType === 'street' || /street|drift|ride|รถ|ดริฟท์/i.test(combined)) {
+    c1 = '#ff2b88'; c2 = '#00e1ff'; emoji = '🏎️'; badge = 'STREET • DRIFT';
+  } else if (coverType === 'memorial' || /ศพ|กรอบรูป|อนุสรณ์/.test(combined)) {
+    c1 = '#b88937'; c2 = '#f7dc9f'; emoji = '🕊️'; badge = 'CANVAS TOOL';
+  } else if (coverType === 'chibi' || /chibi|ชิบิ|คู่/i.test(combined)) {
+    c1 = '#358aff'; c2 = '#ba88ff'; emoji = '🌟'; badge = 'CHIBI 80 PACK';
+  } else if (/ภาพบุคคล|portrait/i.test(combined)) {
+    c1 = '#3272e8'; c2 = '#5cd4b5'; emoji = '👤'; badge = 'PORTRAIT MASTER';
+  }
+
+  const t = xmlText(String(title || 'PROMPT ITEM').slice(0, 32));
+  const sub = xmlText(category || 'MIX-IMAGE STUDIO');
+
+  // Exact 2:3 Aspect Ratio: 800 width x 1200 height
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="800" height="1200" viewBox="0 0 800 1200">
     <defs>
-      <linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="${c1}"/><stop offset="1" stop-color="${c2}"/></linearGradient>
-      <radialGradient id="glow"><stop stop-color="#fff" stop-opacity=".5"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+      <linearGradient id="g23" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stop-color="${c1}"/>
+        <stop offset="100%" stop-color="${c2}"/>
+      </linearGradient>
+      <radialGradient id="glow23" cx="50%" cy="38%" r="50%">
+        <stop offset="0%" stop-color="#ffffff" stop-opacity="0.32"/>
+        <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+      </radialGradient>
     </defs>
-    <rect width="960" height="540" fill="#111a2e"/>
-    <rect x="0" y="0" width="960" height="540" fill="url(#g)" opacity=".9"/>
-    <circle cx="790" cy="85" r="260" fill="url(#glow)"/>
-    <circle cx="825" cy="105" r="150" fill="#ffffff" fill-opacity=".11"/>
-    <circle cx="870" cy="74" r="92" stroke="#fff" stroke-opacity=".25" stroke-width="2" fill="none"/>
-    <circle cx="870" cy="74" r="120" stroke="#fff" stroke-opacity=".15" stroke-width="2" fill="none"/>
-    <rect x="47" y="46" width="220" height="34" rx="17" fill="#fff" fill-opacity=".93"/>
-    <text x="157" y="68" font-family="Arial,sans-serif" font-size="12" font-weight="700" text-anchor="middle" fill="#233452">${xmlText(label)}</text>
-    <text x="50" y="210" font-family="Arial,sans-serif" font-size="92" font-weight="800" fill="#fff" opacity=".16">${emoji}</text>
-    <text x="50" y="303" font-family="Arial,sans-serif" font-size="38" font-weight="800" fill="#fff">${t}</text>
-    <text x="52" y="352" font-family="Arial,sans-serif" font-size="21" fill="#fff" fill-opacity=".9">${sub}</text>
-    <path d="M52 402 H340" stroke="#fff" stroke-opacity=".55" stroke-width="3" stroke-linecap="round"/>
-    <text x="52" y="449" font-family="Arial,sans-serif" font-size="15" letter-spacing="4" fill="#fff" fill-opacity=".8">MIX-IMAGE · CLOUD ARCHIVE</text>
-    <rect x="700" y="300" width="200" height="150" rx="22" fill="#fff" fill-opacity=".13" stroke="#fff" stroke-opacity=".25"/>
-    <rect x="724" y="326" width="152" height="98" rx="12" fill="#fff" fill-opacity=".9"/>
-    <path d="M742 350 H850 M742 366 H833 M742 382 H859 M742 398 H810" stroke="${c1}" stroke-width="7" stroke-linecap="round" opacity=".65"/>
+    
+    <!-- Background -->
+    <rect width="800" height="1200" fill="#101827"/>
+    <rect width="800" height="1200" fill="url(#g23)" opacity="0.88"/>
+    <circle cx="400" cy="450" r="340" fill="url(#glow23)"/>
+    
+    <!-- Decorative 2:3 Inner Frame Line -->
+    <rect x="40" y="40" width="720" height="1120" rx="32" fill="none" stroke="#ffffff" stroke-opacity="0.25" stroke-width="2.5"/>
+    
+    <!-- Top Model Badge (Image 3 Style) -->
+    <rect x="60" y="60" width="240" height="46" rx="23" fill="#0d1422" fill-opacity="0.88"/>
+    <text x="180" y="90" font-family="Arial,sans-serif" font-size="16" font-weight="800" text-anchor="middle" fill="#ffffff">${xmlText(badge)}</text>
+    
+    <!-- Aspect Ratio 2:3 Pill -->
+    <rect x="620" y="60" width="120" height="46" rx="23" fill="#ffffff" fill-opacity="0.22"/>
+    <text x="680" y="90" font-family="Arial,sans-serif" font-size="16" font-weight="800" text-anchor="middle" fill="#ffffff">2:3</text>
+    
+    <!-- Center Graphic Circle & Emoji -->
+    <circle cx="400" cy="480" r="170" fill="#ffffff" fill-opacity="0.14"/>
+    <circle cx="400" cy="480" r="150" fill="#0c1322" fill-opacity="0.45"/>
+    <text x="400" y="540" font-family="Arial,sans-serif" font-size="135" text-anchor="middle">${emoji}</text>
+    
+    <!-- Bottom Content Card -->
+    <rect x="60" y="780" width="680" height="340" rx="26" fill="#0c1322" fill-opacity="0.90"/>
+    
+    <text x="100" y="860" font-family="Arial,sans-serif" font-size="36" font-weight="800" fill="#ffffff">${t}</text>
+    <text x="100" y="915" font-family="Arial,sans-serif" font-size="22" font-weight="600" fill="#a4b8d6">${sub}</text>
+    <path d="M100 955 H700" stroke="#ffffff" stroke-opacity="0.2" stroke-width="2"/>
+    
+    <text x="100" y="1010" font-family="monospace" font-size="18" fill="#e0ecff" opacity="0.85"># 2:3 ULTRA-HD PORTRAIT SPEC</text>
+    <text x="100" y="1045" font-family="monospace" font-size="18" fill="#e0ecff" opacity="0.65">MIX-IMAGE PRIVATE PROMPT VAULT</text>
+    
+    <!-- Watermark Brand -->
+    <text x="400" y="1170" font-family="Arial,sans-serif" font-size="15" font-weight="700" letter-spacing="4" text-anchor="middle" fill="#ffffff" opacity="0.75">MIX-IMAGE · ART &amp; AUDIO</text>
   </svg>`;
+
   return 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg);
 }
 
@@ -134,230 +322,194 @@ function getCoverUrl(entry) {
   return makeSvgCover(entry.title, entry.categoryName, entry.coverType);
 }
 
-// --- Category Helpers ---
-function getCategories() {
-  const cats = [...new Set(entries.map(e => e.categoryName || 'อื่น ๆ'))];
-  return cats.sort((a, b) => a.localeCompare(b, 'th'));
-}
+// =========================================================================
+// 3. CATEGORIES & STATS
+// =========================================================================
+const DEFAULT_CATEGORIES = [
+  { name: 'ทั้งหมด', key: 'all', icon: '✧' },
+  { name: 'ทั่วไป', key: 'general', icon: '🗂' },
+  { name: 'โน้ตส่วนตัว', key: 'notes', icon: '📝' },
+  { name: 'ภาพบุคคล', key: 'portrait', icon: '👤' },
+  { name: 'Prompt Pack', key: 'prompt-pack', icon: '🌟' },
+  { name: 'เครื่องมือออกแบบ', key: 'design-tools', icon: '✎' },
+  { name: 'เว็บแอป', key: 'web-apps', icon: '⌘' }
+];
 
-const catIcons = {
-  'Prompt Pack': '✧',
-  'เครื่องมือออกแบบ': '✎',
-  'เว็บแอป': '⌘',
-  'เทมเพลต': '▧',
-  'อื่น ๆ': '•'
-};
+function renderCategoriesBar() {
+  const container = $('#categoriesBar');
+  if (!container) return;
 
-// --- Duplicate Hash Detector ---
-function getDuplicateHashIds() {
-  const hashMap = new Map();
-  const dups = new Set();
-  for (const e of entries) {
-    if (!e.contentHash) continue;
-    if (hashMap.has(e.contentHash)) {
-      dups.add(e.id);
-      dups.add(hashMap.get(e.contentHash));
-    } else {
-      hashMap.set(e.contentHash, e.id);
-    }
-  }
-  return dups;
-}
-
-// --- Render Dashboard ---
-function render() {
-  renderStats();
-  renderCategories();
-  renderSideCats();
-  renderGrid();
-
-  // Active navigation button
-  $$('.nav button[data-view]').forEach(b => {
-    b.classList.toggle('active', b.dataset.view === currentView);
-  });
-
-  $('#listTitle').textContent = currentView === 'favorites'
-    ? 'รายการโปรด'
-    : currentCategory !== 'all' ? currentCategory : 'คลัง HTML ทั้งหมด';
-
-  $('#listSub').textContent = currentView === 'favorites'
-    ? 'ไฟล์ที่ทำเครื่องหมายดาวไว้บนคลาวด์'
-    : currentCategory !== 'all' ? `ไฟล์ในหมวดหมู่ “${currentCategory}”` : 'เปิดดูรายละเอียด แล้วดาวน์โหลดไฟล์ไปใช้ได้ทันที';
-
-  $('#customCoverFilter').classList.toggle('active', onlyCustomCover);
-}
-
-function renderStats() {
-  const cats = getCategories();
-  const favCount = userFavorites.size;
-  const totalBytes = entries.reduce((acc, e) => acc + (Number(e.fileSize) || 0), 0);
-
-  $('#statTotal').textContent = entries.length;
-  $('#statCats').textContent = cats.length;
-  $('#statFav').textContent = favCount;
-  $('#statSize').textContent = fmtSize(totalBytes);
-}
-
-function renderCategories() {
-  const cats = getCategories();
+  const cats = [...new Set(entries.map(e => e.categoryName || 'ทั่วไป'))];
   const list = [
     { name: 'ทั้งหมด', key: 'all', icon: '✧', count: entries.length },
-    ...cats.map((c, i) => ({
+    ...cats.map(c => ({
       name: c,
       key: c,
-      icon: catIcons[c] || ['▤', '◈', '✦', '⌘'][i % 4],
-      count: entries.filter(e => (e.categoryName || 'อื่น ๆ') === c).length
+      icon: getCategoryIcon(c),
+      count: entries.filter(e => (e.categoryName || 'ทั่วไป') === c).length
     }))
   ];
 
-  $('#categories').innerHTML = list.map(c => `
-    <button class="category ${currentCategory === c.key ? 'active' : ''}" data-cat="${htmlEsc(c.key)}">
-      <span class="cicon">${c.icon}</span>
-      <strong title="${htmlEsc(c.name)}">${htmlEsc(c.name)}</strong>
-      <small>${c.count} ไฟล์</small>
+  container.innerHTML = list.map(c => `
+    <button class="cat-btn ${currentCategory === c.key ? 'active' : ''}" data-cat="${htmlEsc(c.key)}">
+      <div class="cat-icon">${c.icon}</div>
+      <strong>${htmlEsc(c.name)}</strong>
+      <small>${c.count} รายการ</small>
     </button>
   `).join('');
 
   $$('[data-cat]').forEach(b => {
     b.addEventListener('click', () => {
       currentCategory = b.dataset.cat;
-      currentView = 'all';
       render();
     });
   });
 }
 
-function renderSideCats() {
-  const cats = getCategories();
-  $('#sideCats').innerHTML = cats.map(c => `
-    <button data-sidecat="${htmlEsc(c)}">
-      <span>${htmlEsc(c)}</span>
-      <span class="countpill">${entries.filter(e => (e.categoryName || 'อื่น ๆ') === c).length}</span>
-    </button>
-  `).join('');
-
-  $$('[data-sidecat]').forEach(b => {
-    b.addEventListener('click', () => {
-      currentCategory = b.dataset.sidecat;
-      currentView = 'all';
-      render();
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    });
-  });
+function getCategoryIcon(c) {
+  if (/บุคคล|portrait|คน/i.test(c)) return '👤';
+  if (/prompt|พรอมต์/i.test(c)) return '🌟';
+  if (/เครื่องมือ|ออกแบบ|canvas/i.test(c)) return '✎';
+  if (/แอป|app|web/i.test(c)) return '⌘';
+  if (/โน้ต|note/i.test(c)) return '📝';
+  return '🗂';
 }
 
-function getFilteredList() {
+function updateStatsAndCounters() {
+  const total = entries.length;
+  const notesCount = entries.filter(e => Boolean(e.notes)).length;
+  const favCount = userFavorites.size;
+  const previewCount = entries.filter(e => Boolean(e.coverDownloadUrl || e.htmlDownloadUrl)).length;
+
+  $('#statTotal').textContent = total;
+  $('#statNotes').textContent = notesCount;
+  $('#statFav').textContent = favCount;
+  $('#sideTotalCount').textContent = total;
+  $('#sideNotesCount').textContent = notesCount;
+
+  $('#chipAllCount').textContent = total;
+  $('#chipFavCount').textContent = favCount;
+  $('#chipNotesCount').textContent = notesCount;
+  $('#chipPreviewCount').textContent = previewCount;
+}
+
+// =========================================================================
+// 4. FILTERING & 2:3 CARD GRID RENDERING (Matching Image 3)
+// =========================================================================
+function getFilteredEntries() {
   let list = [...entries];
 
-  if (currentView === 'favorites') {
+  // Quick Filter Chips
+  if (activeFilter === 'favorites') {
     list = list.filter(e => userFavorites.has(e.id));
+  } else if (activeFilter === 'has-notes') {
+    list = list.filter(e => Boolean(e.notes));
+  } else if (activeFilter === 'has-preview') {
+    list = list.filter(e => Boolean(e.coverDownloadUrl || e.htmlDownloadUrl));
   }
+
+  // Category Filter
   if (currentCategory !== 'all') {
-    list = list.filter(e => (e.categoryName || 'อื่น ๆ') === currentCategory);
+    list = list.filter(e => (e.categoryName || 'ทั่วไป') === currentCategory);
   }
-  if (onlyCustomCover) {
-    list = list.filter(e => Boolean(e.coverDownloadUrl));
-  }
+
+  // Search
   if (searchTerm) {
     const q = searchTerm.toLowerCase();
     list = list.filter(e => {
-      const haystack = [
+      return [
         e.title,
         e.originalFilename,
         e.description,
         e.categoryName,
         e.notes,
         ...(e.tags || [])
-      ].join(' ').toLowerCase();
-      return haystack.includes(q);
+      ].join(' ').toLowerCase().includes(q);
     });
   }
 
   // Sorting
   list.sort((a, b) => {
-    if (currentSort === 'newest') {
-      return new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0);
-    }
-    if (currentSort === 'oldest') {
-      return new Date(a.updatedAt || 0) - new Date(b.updatedAt || 0);
-    }
-    if (currentSort === 'name') {
-      return (a.title || '').localeCompare(b.title || '', 'th');
-    }
-    if (currentSort === 'size') {
-      return (Number(b.fileSize) || 0) - (Number(a.fileSize) || 0);
-    }
+    if (currentSort === 'newest') return new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0);
+    if (currentSort === 'name') return (a.title || '').localeCompare(b.title || '', 'th');
+    if (currentSort === 'size') return (Number(b.fileSize) || 0) - (Number(a.fileSize) || 0);
     return 0;
   });
 
   return list;
 }
 
+function render() {
+  updateStatsAndCounters();
+  renderCategoriesBar();
+  renderGrid();
+
+  $('#shownCount').textContent = `แสดง ${getFilteredEntries().length} รายการ`;
+}
+
 function renderGrid() {
-  const list = getFilteredList();
-  const dups = getDuplicateHashIds();
-  $('#shownCount').textContent = `แสดง ${list.length} / ${entries.length} ไฟล์`;
+  const list = getFilteredEntries();
+  const grid = $('#grid');
 
   if (!list.length) {
-    $('#grid').innerHTML = `
-      <div class="empty">
-        <div class="big">⌕</div>
-        <h3>ยังไม่พบไฟล์ที่ค้นหาในคลังคลาวด์</h3>
-        <p>คุณสามารถติดตั้งไฟล์ตัวอย่าง 4 รายการเพื่อเริ่มต้นใช้งาน หรืออัปโหลดไฟล์ HTML ใหม่ของคุณ</p>
-        <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:14px;">
-          <button class="primary" id="emptySeed">⚡ ติดตั้งไฟล์ตัวอย่างเริ่มต้น 4 รายการ</button>
-          <button class="secondary" id="emptyAdd">＋ เพิ่มไฟล์ HTML เอง</button>
-        </div>
+    grid.innerHTML = `
+      <div class="empty" style="grid-column: 1/-1; text-align:center; padding: 48px 16px; background:#fff; border-radius:24px; border:1px dashed #c9d8ee;">
+        <div style="font-size: 40px; margin-bottom: 8px;">🎨</div>
+        <h3 style="margin: 0 0 6px;">ยังไม่มีรายการในหมวดนี้</h3>
+        <p style="color:#647593; font-size:12px; margin:0 0 16px;">คุณสามารถกดปุ่มด้านล่างเพื่อโหลดไฟล์ตัวอย่างลงคลังคลาวด์ได้ทันที</p>
+        <button class="primary" id="emptySeedBtn">⚡ ติดตั้งไฟล์ตัวอย่างลงคลาวด์ทันที</button>
       </div>
     `;
-    $('#emptySeed')?.addEventListener('click', seedInitialSamples);
-    $('#emptyAdd')?.addEventListener('click', () => openEditorModal());
+    $('#emptySeedBtn')?.addEventListener('click', seedInitialSamples);
     return;
   }
 
-  $('#grid').innerHTML = list.map(e => {
+  grid.innerHTML = list.map(e => {
     const isFav = userFavorites.has(e.id);
     const coverUrl = getCoverUrl(e);
-    const hasCustomCover = Boolean(e.coverDownloadUrl);
-    const isDuplicate = dups.has(e.id);
-    const tagsHtml = (e.tags || []).slice(0, 4).map(t => `<span class="tag">${htmlEsc(t)}</span>`).join('');
+    const modelTag = e.modelTag || (e.tags?.[0]) || 'GPT-Image 2.5';
+    const folderName = e.categoryName || 'ภาพบุคคล';
+    const hasSpecialTag = e.tags && e.tags.includes('รูปติดบัตรหญิง');
 
     return `
-      <article class="file-card" data-id="${htmlEsc(e.id)}">
-        <div class="cover">
-          <img src="${coverUrl}" alt="ภาพปก ${htmlEsc(e.title)}" loading="lazy">
-          <span class="cover-tag">${htmlEsc(e.categoryName || 'อื่น ๆ')}</span>
-          <button class="fav ${isFav ? 'on' : ''}" data-fav="${htmlEsc(e.id)}" title="${isFav ? 'นำออกจากรายการโปรด' : 'เพิ่มในรายการโปรด'}" aria-label="รายการโปรด">
+      <article class="file-card-2-3" data-id="${htmlEsc(e.id)}">
+        <!-- Exact 2:3 Portrait Container -->
+        <div class="media-2-3" data-action="preview" data-id="${htmlEsc(e.id)}" title="คลิกเพื่อดูตัวอย่างแบบขยาย">
+          <img src="${coverUrl}" alt="${htmlEsc(e.title)}" loading="lazy">
+          <span class="media-tag-left">${htmlEsc(modelTag)}</span>
+          <span class="media-ratio-pill">2:3</span>
+          <button class="media-fav-star ${isFav ? 'on' : ''}" data-fav="${htmlEsc(e.id)}" aria-label="รายการโปรด">
             ${isFav ? '★' : '☆'}
           </button>
         </div>
-        <div class="file-info">
-          <div class="file-meta">
-            <span class="badge">${htmlEsc(e.categoryName || 'อื่น ๆ')}</span>
-            ${hasCustomCover ? '<span class="badge green">ภาพปกกำหนดเอง</span>' : ''}
-            ${isDuplicate ? '<span class="badge orange" title="พบไฟล์ที่มี SHA-256 เหมือนกัน">ไฟล์ซ้ำ</span>' : ''}
-            ${e.visibility === 'private' ? '<span class="badge">🔒 ส่วนตัว</span>' : ''}
+
+        <!-- Card Content (Image 3 Style) -->
+        <div class="card-content-2-3">
+          <div class="card-pills-row">
+            <span class="cat-pill-pink">${htmlEsc(folderName)} ▾</span>
+            <span class="folder-pill-gray">📁 ${htmlEsc(e.originalFilename || 'ใส่โฟลเดอร์')}</span>
+            ${hasSpecialTag ? '<span class="tag-pill-blue">รูปติดบัตรหญิง</span>' : ''}
           </div>
-          <div class="file-title">${htmlEsc(e.title || e.originalFilename)}</div>
-          <div class="file-desc">${htmlEsc(e.description || 'ยังไม่มีคำอธิบาย — สามารถกดแก้ไขเพื่อใส่คำแนะนำหรือจุดเด่น')}</div>
-          <div class="tags">${tagsHtml || '<span class="tag">ไม่มีแท็ก</span>'}</div>
-          <div class="filename">▤ ${htmlEsc(e.originalFilename)} · ${fmtSize(e.fileSize)}</div>
-          <div class="card-actions">
-            <button class="view" data-action="preview" data-id="${htmlEsc(e.id)}">ดูตัวอย่าง ↗</button>
-            <button data-action="download" data-id="${htmlEsc(e.id)}">ดาวน์โหลด ↓</button>
-            <button data-action="edit" data-id="${htmlEsc(e.id)}" title="แก้ไขข้อมูล">✎</button>
-            <button class="delete" data-action="delete" data-id="${htmlEsc(e.id)}" title="ลบไฟล์">⌫</button>
-          </div>
-          <div class="date-row">
-            <span>แก้ไข ${dateShort(e.updatedAt || e.createdAt)}</span>
-            <span>${e.notes ? 'มีโน้ต' : ''}</span>
+
+          <h4 class="card-title-2-3">${htmlEsc(e.title || e.originalFilename)}</h4>
+          <p class="card-desc-2-3" data-action="copy" data-id="${htmlEsc(e.id)}" title="คลิกเพื่อคัดลอกพรอมต์">${htmlEsc(e.description || e.notes || 'พรอมต์และไฟล์ HTML สัดส่วน 2:3 พร้อมใช้งาน')}</p>
+
+          <div class="card-footer-2-3">
+            <span class="card-date-small">อัปเดต ${dateShort(e.updatedAt || e.createdAt)}</span>
+            <div class="card-btns-row">
+              <button class="mbtn copy" data-action="copy" data-id="${htmlEsc(e.id)}" title="คัดลอกพรอมต์">📋 คัดลอก</button>
+              <button class="mbtn preview" data-action="preview" data-id="${htmlEsc(e.id)}" title="ดูตัวอย่าง">↗ ตัวอย่าง</button>
+              <button class="mbtn" data-action="download" data-id="${htmlEsc(e.id)}" title="ดาวน์โหลด">↓</button>
+              <button class="mbtn" data-action="edit" data-id="${htmlEsc(e.id)}" title="แก้ไข">✎</button>
+              <button class="mbtn del" data-action="delete" data-id="${htmlEsc(e.id)}" title="ลบ">🗑</button>
+            </div>
           </div>
         </div>
       </article>
     `;
   }).join('');
 
-  // Attach card listeners
+  // Attach card event listeners
   $$('[data-fav]').forEach(b => {
     b.addEventListener('click', (ev) => {
       ev.stopPropagation();
@@ -373,50 +525,57 @@ function renderGrid() {
   });
 }
 
-// --- Action Handlers ---
-async function handleToggleFavorite(fileId) {
-  const user = getCurrentUser();
-  if (!user) {
-    toast('กรุณาเข้าสู่ระบบเพื่อบันทึกรายการโปรด');
-    openAuthModal();
-    return;
-  }
-  const isFav = userFavorites.has(fileId);
-  try {
-    await toggleUserFavorite(user.uid, fileId, isFav);
-    if (isFav) {
-      userFavorites.delete(fileId);
-      toast('นำออกจากรายการโปรดแล้ว');
-    } else {
-      userFavorites.add(fileId);
-      toast('บันทึกลงรายการโปรดแล้ว');
-    }
-    render();
-  } catch (err) {
-    toast('ไม่สามารถอัปเดตรายการโปรด: ' + err.message);
-  }
-}
-
+// =========================================================================
+// 5. ACTION HANDLERS (Copy, Preview, Download, Edit, Delete)
+// =========================================================================
 async function handleCardAction(action, fileId) {
   const entry = entries.find(x => x.id === fileId);
   if (!entry) return;
 
-  if (action === 'preview') {
+  if (action === 'copy') {
+    const textToCopy = entry.description || entry.title || entry.notes || '';
+    if (textToCopy) {
+      await navigator.clipboard.writeText(textToCopy);
+      toast('📋 คัดลอกข้อความพรอมต์ลง Clipboard แล้ว!');
+    } else {
+      toast('ไม่มีข้อความให้คัดลอก');
+    }
+  } else if (action === 'preview') {
     openPreviewModal(entry);
   } else if (action === 'download') {
     downloadOriginalFile(entry);
   } else if (action === 'edit') {
     openEditorModal(entry);
   } else if (action === 'delete') {
-    if (!confirm(`คุณต้องการลบ “${entry.title || entry.originalFilename}” ออกจากคลังคลาวด์ใช่หรือไม่?`)) return;
+    if (!confirm(`ต้องการลบ “${entry.title || entry.originalFilename}” ใช่หรือไม่?`)) return;
     try {
       await deleteHtmlFileRecord(fileId, entry.title);
       if (entry.htmlStoragePath) await deleteStoragePath(entry.htmlStoragePath);
       if (entry.coverStoragePath) await deleteStoragePath(entry.coverStoragePath);
-      toast('ลบไฟล์ออกจากคลังเรียบร้อยแล้ว');
+      toast('ลบรายการออกจากคลังเรียบร้อยแล้ว');
     } catch (err) {
       toast('ลบไม่สำเร็จ: ' + err.message);
     }
+  }
+}
+
+async function handleToggleFavorite(fileId) {
+  const user = getCurrentUser();
+  const uid = user?.uid || 'owner-master';
+  const isFav = userFavorites.has(fileId);
+
+  try {
+    await toggleUserFavorite(uid, fileId, isFav);
+    if (isFav) {
+      userFavorites.delete(fileId);
+      toast('นำออกจากรายการโปรดแล้ว');
+    } else {
+      userFavorites.add(fileId);
+      toast('⭐ เพิ่มในรายการโปรดแล้ว');
+    }
+    render();
+  } catch (err) {
+    toast('ไม่สามารถอัปเดต: ' + err.message);
   }
 }
 
@@ -424,7 +583,7 @@ async function handleCardAction(action, fileId) {
 async function openPreviewModal(entry) {
   previewEntry = entry;
   $('#previewTitle').textContent = entry.title || entry.originalFilename;
-  $('#previewDesc').textContent = entry.description || 'รันในแซนด์บ็อกซ์แยก (Isolated CSP Guard)';
+  $('#previewDesc').textContent = entry.description || 'รันในแซนด์บ็อกซ์แยกอิสระ (สัดส่วน 2:3)';
   $('#previewFilename').textContent = `${entry.originalFilename} · ${fmtSize(entry.fileSize)}`;
 
   const frame = $('#previewFrame');
@@ -435,11 +594,12 @@ async function openPreviewModal(entry) {
     if (entry.htmlDownloadUrl) {
       const resp = await fetch(entry.htmlDownloadUrl);
       htmlContent = await resp.text();
+    } else if (entry.body) {
+      htmlContent = entry.body;
     } else {
-      htmlContent = '<h1>ไม่พบเนื้อหาไฟล์</h1>';
+      htmlContent = `<h1>${htmlEsc(entry.title)}</h1><p>${htmlEsc(entry.description)}</p>`;
     }
 
-    // Strict Sandbox Guard: Inject restrictive Content Security Policy into preview HTML
     const cspMeta = `<meta http-equiv="Content-Security-Policy" content="default-src 'self' data: blob: https:; script-src 'unsafe-inline' 'unsafe-eval' https:; style-src 'unsafe-inline' https:; object-src 'none';">`;
     const guardedHtml = htmlContent.includes('<head>')
       ? htmlContent.replace('<head>', `<head>${cspMeta}`)
@@ -449,18 +609,8 @@ async function openPreviewModal(entry) {
     $('#previewWrap').classList.add('show');
     document.body.style.overflow = 'hidden';
   } catch (err) {
-    toast('ไม่สามารถโหลดพรีวิว: ' + err.message);
+    toast('โหลดตัวอย่างไม่สำเร็จ: ' + err.message);
   }
-}
-
-function openIsolatedTab() {
-  if (!previewEntry) return;
-  const frame = $('#previewFrame');
-  const guardedHtml = frame.srcdoc || '<h1>No Content</h1>';
-  const blob = new Blob([guardedHtml], { type: 'text/html;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
-  window.open(url, '_blank', 'noopener,noreferrer');
-  setTimeout(() => URL.revokeObjectURL(url), 60000);
 }
 
 function downloadOriginalFile(entry) {
@@ -469,11 +619,21 @@ function downloadOriginalFile(entry) {
     const a = document.createElement('a');
     a.href = entry.htmlDownloadUrl;
     a.download = entry.originalFilename || 'archive.html';
-    a.target = '_blank';
     document.body.appendChild(a);
     a.click();
     a.remove();
-    toast('กำลังเริ่มดาวน์โหลดไฟล์ต้นฉบับ...');
+    toast('กำลังดาวน์โหลดไฟล์ HTML...');
+  } else if (entry.body) {
+    const blob = new Blob([entry.body], { type: 'text/html;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = entry.originalFilename || 'file.html';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+    toast('ดาวน์โหลดไฟล์เรียบร้อย');
   }
 }
 
@@ -488,43 +648,36 @@ function openEditorModal(entry = null) {
 
   $('#editForm').reset();
   $('#coverPreview').hidden = true;
-  $('#coverPreview').removeAttribute('src');
   $('#uploadProgressWrap').hidden = true;
-  $('#uploadProgressFill').style.width = '0%';
 
   if (entry) {
-    $('#editTitle').textContent = 'แก้ไขรายละเอียดไฟล์บนคลาวด์';
-    $('#saveBtn').textContent = 'บันทึกการแก้ไข';
+    $('#editTitle').textContent = 'แก้ไขรายละเอียดไฟล์/พรอมต์';
     $('#fileUploadField').hidden = true;
     $('#titleInput').value = entry.title || '';
     $('#categoryInput').value = entry.categoryName || '';
+    $('#modelTagInput').value = entry.modelTag || '';
     $('#descInput').value = entry.description || '';
-    $('#tagsInput').value = (entry.tags || []).join(', ');
     $('#notesInput').value = entry.notes || '';
-    $('#visibilitySelect').value = entry.visibility || 'public';
-
     if (entry.coverDownloadUrl) {
       $('#coverPreview').src = entry.coverDownloadUrl;
       $('#coverPreview').hidden = false;
     }
   } else {
-    $('#editTitle').textContent = 'เพิ่มไฟล์ HTML สู่คลาวด์';
-    $('#saveBtn').textContent = 'บันทึกลงคลาวด์';
+    $('#editTitle').textContent = 'เพิ่มพรอมต์ / ไฟล์ HTML ใหม่';
     $('#fileUploadField').hidden = false;
-    $('#fileSelectInfo').textContent = 'ระบบจะดึงชื่อจาก <title> และคำอธิบายจาก meta description ให้อัตโนมัติ';
+    $('#fileSelectInfo').textContent = 'ระบบจะสกัดชื่อและคำอธิบายให้อัตโนมัติ';
   }
 
   $('#editWrap').classList.add('show');
   document.body.style.overflow = 'hidden';
 }
 
-$('#htmlFiles').addEventListener('change', async (ev) => {
+$('#htmlFiles')?.addEventListener('change', async (ev) => {
   const file = ev.target.files?.[0];
   if (!file) return;
   selectedHtmlFile = file;
-  $('#fileSelectInfo').textContent = `เลือกไฟล์: ${file.name} (${fmtSize(file.size)})`;
+  $('#fileSelectInfo').textContent = `เลือก: ${file.name} (${fmtSize(file.size)})`;
 
-  // Pre-parse title and description from HTML
   try {
     const text = await file.text();
     const doc = new DOMParser().parseFromString(text, 'text/html');
@@ -533,56 +686,35 @@ $('#htmlFiles').addEventListener('change', async (ev) => {
 
     if (!$('#titleInput').value) $('#titleInput').value = autoTitle;
     if (!$('#descInput').value && autoDesc) $('#descInput').value = autoDesc;
-    if (!$('#categoryInput').value) {
-      if (/prompt|พรอมต์|gpt image|chibi/i.test(autoTitle + ' ' + text.slice(0, 5000))) {
-        $('#categoryInput').value = 'Prompt Pack';
-      } else if (/canvas|กรอบรูป|งานพิมพ์|ภาพหน้างานศพ/i.test(autoTitle + ' ' + text.slice(0, 5000))) {
-        $('#categoryInput').value = 'เครื่องมือออกแบบ';
-      } else {
-        $('#categoryInput').value = 'เทมเพลต';
-      }
-    }
-
-    // Check duplicate hash in background
-    const hash = await computeContentHash(text);
-    const existing = await findByContentHash(hash);
-    if (existing) {
-      toast(`⚠️ พบไฟล์ที่มีเนื้อหาเดียวกันในคลังแล้ว: “${existing.title}”`);
-    }
-  } catch (err) {
-    console.warn("Could not parse file:", err);
-  }
+    if (!$('#categoryInput').value) $('#categoryInput').value = 'ภาพบุคคล';
+    if (!$('#modelTagInput').value) $('#modelTagInput').value = 'GPT-Image 2.5';
+  } catch (_) {}
 });
 
-$('#coverInput').addEventListener('change', async (ev) => {
+$('#coverInput')?.addEventListener('change', (ev) => {
   const file = ev.target.files?.[0];
   if (!file) {
     selectedCoverBlob = null;
     return;
   }
   selectedCoverBlob = file;
-  const url = URL.createObjectURL(file);
-  $('#coverPreview').src = url;
+  $('#coverPreview').src = URL.createObjectURL(file);
   $('#coverPreview').hidden = false;
 });
 
-$('#editForm').addEventListener('submit', async (ev) => {
+$('#editForm')?.addEventListener('submit', async (ev) => {
   ev.preventDefault();
 
   const title = $('#titleInput').value.trim();
-  const categoryName = $('#categoryInput').value.trim() || 'อื่น ๆ';
+  const categoryName = $('#categoryInput').value.trim() || 'ทั่วไป';
   const categoryId = categoryName.toLowerCase().replace(/\s+/g, '-');
+  const modelTag = $('#modelTagInput').value.trim() || 'GPT-Image 2.5';
   const description = $('#descInput').value.trim();
-  const tags = $('#tagsInput').value.split(',').map(x => x.trim()).filter(Boolean);
   const notes = $('#notesInput').value.trim();
-  const visibility = $('#visibilitySelect').value || 'public';
 
   try {
     if (editingId) {
-      // Update existing record
       const entry = entries.find(x => x.id === editingId);
-      if (!entry) return;
-
       let coverDownloadUrl = entry.coverDownloadUrl || '';
       let coverStoragePath = entry.coverStoragePath || '';
 
@@ -590,7 +722,7 @@ $('#editForm').addEventListener('submit', async (ev) => {
         $('#uploadProgressWrap').hidden = false;
         const upload = await uploadCoverImage(editingId, selectedCoverBlob, (pct) => {
           $('#uploadProgressFill').style.width = `${pct}%`;
-          $('#uploadProgressText').textContent = `กำลังอัปโหลดภาพปก: ${pct}%`;
+          $('#uploadProgressText').textContent = `กำลังอัปโหลดรูป 2:3: ${pct}%`;
         });
         coverDownloadUrl = upload.downloadUrl;
         coverStoragePath = upload.storagePath;
@@ -598,22 +730,20 @@ $('#editForm').addEventListener('submit', async (ev) => {
 
       await updateHtmlFileRecord(editingId, {
         title,
-        categoryId,
         categoryName,
+        categoryId,
+        modelTag,
         description,
-        tags,
         notes,
-        visibility,
         coverDownloadUrl,
         coverStoragePath
       });
 
       closeModal('editWrap');
-      toast('บันทึกการแก้ไขเรียบร้อยแล้ว');
+      toast('บันทึกการแก้ไขเรียบร้อย');
     } else {
-      // Create new record
       if (!selectedHtmlFile) {
-        toast('กรุณาเลือกไฟล์ HTML ก่อนบันทึก');
+        toast('กรุณาเลือกไฟล์ HTML ก่อน');
         return;
       }
 
@@ -621,35 +751,28 @@ $('#editForm').addEventListener('submit', async (ev) => {
       const text = await selectedHtmlFile.text();
       const contentHash = await computeContentHash(text);
 
-      // Check duplicates
-      const dup = await findByContentHash(contentHash);
-      if (dup) {
-        const proceed = confirm(`ไฟล์นี้มีเนื้อหาเหมือนกับ “${dup.title}” (${dup.originalFilename}) ที่อยู่ในคลังแล้ว\n\nต้องการบันทึกเป็นสำเนาอีกรายการหรือไม่?`);
-        if (!proceed) return;
-      }
-
       $('#uploadProgressWrap').hidden = false;
 
-      // 1. Upload HTML
+      // Upload HTML
       const htmlUpload = await uploadHtmlFile(fileId, selectedHtmlFile, selectedHtmlFile.name, (pct) => {
         $('#uploadProgressFill').style.width = `${pct}%`;
-        $('#uploadProgressText').textContent = `กำลังอัปโหลดไฟล์ HTML: ${pct}%`;
+        $('#uploadProgressText').textContent = `อัปโหลด HTML: ${pct}%`;
       });
 
-      // 2. Upload Cover if present
+      // Upload Cover
       let coverUpload = null;
       if (selectedCoverBlob) {
-        $('#uploadProgressText').textContent = 'กำลังอัปโหลดภาพปก...';
+        $('#uploadProgressText').textContent = 'อัปโหลดภาพ 2:3...';
         coverUpload = await uploadCoverImage(fileId, selectedCoverBlob);
       }
 
-      // 3. Write Firestore record
       await createHtmlFileRecord({
         title: title || selectedHtmlFile.name,
         description,
         categoryId,
         categoryName,
-        tags,
+        modelTag,
+        tags: [modelTag, categoryName],
         originalFilename: selectedHtmlFile.name,
         htmlStoragePath: htmlUpload.storagePath,
         htmlDownloadUrl: htmlUpload.downloadUrl,
@@ -659,66 +782,27 @@ $('#editForm').addEventListener('submit', async (ev) => {
         fileSize: selectedHtmlFile.size,
         contentHash,
         notes,
-        visibility
+        visibility: 'public'
       });
 
       closeModal('editWrap');
-      toast('อัปโหลดไฟล์ขึ้นคลาวด์เรียบร้อยแล้ว');
+      toast('เพิ่มไฟล์สำเร็จ!');
     }
   } catch (err) {
-    console.error("Save error:", err);
     toast('บันทึกไม่สำเร็จ: ' + err.message);
   } finally {
     $('#uploadProgressWrap').hidden = true;
   }
 });
 
-// --- Migration & Bulk Importer ---
-$('#migrationNav').addEventListener('click', () => {
-  $('#migrationReport').hidden = true;
-  $('#migrationProgress').hidden = true;
-  $('#migrationWrap').classList.add('show');
-  document.body.style.overflow = 'hidden';
-});
-
-$('#tabJsonMigrate').addEventListener('click', () => {
-  $('#tabJsonMigrate').classList.add('active');
-  $('#tabHtmlMigrate').classList.remove('active');
-  $('#tabSeedMigrate')?.classList.remove('active');
-  $('#paneJsonMigrate').hidden = false;
-  $('#paneHtmlMigrate').hidden = true;
-  $('#paneSeedMigrate').hidden = true;
-});
-
-$('#tabHtmlMigrate').addEventListener('click', () => {
-  $('#tabHtmlMigrate').classList.add('active');
-  $('#tabJsonMigrate').classList.remove('active');
-  $('#tabSeedMigrate')?.classList.remove('active');
-  $('#paneHtmlMigrate').hidden = false;
-  $('#paneJsonMigrate').hidden = true;
-  $('#paneSeedMigrate').hidden = true;
-});
-
-$('#tabSeedMigrate')?.addEventListener('click', () => {
-  $('#tabSeedMigrate').classList.add('active');
-  $('#tabJsonMigrate').classList.remove('active');
-  $('#tabHtmlMigrate').classList.remove('active');
-  $('#paneSeedMigrate').hidden = false;
-  $('#paneJsonMigrate').hidden = true;
-  $('#paneHtmlMigrate').hidden = true;
-});
-
+// =========================================================================
+// 6. SEEDING & MIGRATION
+// =========================================================================
 async function seedInitialSamples() {
   $('#migrationProgress').hidden = false;
   $('#migrationReport').hidden = true;
   $('#migrationWrap').classList.add('show');
   document.body.style.overflow = 'hidden';
-
-  if (!getCurrentUser()) {
-    try {
-      await loginAnonymously();
-    } catch (_) {}
-  }
 
   try {
     const report = await migrateLegacyJsonBackup({ entries: SEED_SAMPLES }, (progress) => {
@@ -727,369 +811,217 @@ async function seedInitialSamples() {
     });
 
     renderMigrationReport(report);
-    toast(`ติดตั้งไฟล์ตัวอย่างสำเร็จ ${report.imported.length} รายการ`);
+    toast(`ติดตั้งตัวอย่างสำเร็จ ${report.imported.length} รายการ`);
   } catch (err) {
-    toast('ติดตั้งไฟล์ตัวอย่างล้มเหลว: ' + err.message);
+    toast('ติดตั้งตัวอย่างล้มเหลว: ' + err.message);
   }
 }
-
-$('#startSeedBtn')?.addEventListener('click', seedInitialSamples);
-
-$('#startJsonMigrateBtn').addEventListener('click', async () => {
-  const file = $('#jsonBackupInput').files?.[0];
-  if (!file) {
-    toast('กรุณาเลือกไฟล์ JSON สำรองข้อมูลก่อน');
-    return;
-  }
-
-  $('#migrationProgress').hidden = false;
-  $('#migrationReport').hidden = true;
-
-  try {
-    const raw = await file.text();
-    const report = await migrateLegacyJsonBackup(raw, (progress) => {
-      $('#migrationBarFill').style.width = `${progress.percent}%`;
-      $('#migrationStatusText').textContent = progress.status;
-    });
-
-    renderMigrationReport(report);
-    toast(`ย้ายข้อมูลสำเร็จ ${report.imported.length} รายการ`);
-  } catch (err) {
-    toast('ย้ายข้อมูลล้มเหลว: ' + err.message);
-  }
-});
-
-$('#startHtmlMigrateBtn').addEventListener('click', async () => {
-  const files = [...($('#batchHtmlInput').files || [])];
-  if (!files.length) {
-    toast('กรุณาเลือกไฟล์ HTML อย่างน้อย 1 ไฟล์');
-    return;
-  }
-
-  $('#migrationProgress').hidden = false;
-  $('#migrationReport').hidden = true;
-
-  try {
-    const report = await migrateHtmlFileList(files, null, (progress) => {
-      $('#migrationBarFill').style.width = `${progress.percent}%`;
-      $('#migrationStatusText').textContent = progress.status;
-    });
-
-    renderMigrationReport(report);
-    toast(`นำเข้าไฟล์ HTML สำเร็จ ${report.imported.length} รายการ`);
-  } catch (err) {
-    toast('นำเข้าไฟล์ล้มเหลว: ' + err.message);
-  }
-});
 
 function renderMigrationReport(report) {
   $('#migrationProgress').hidden = true;
   $('#migrationReport').hidden = false;
 
-  $('#reportSuccess').textContent = `นำเข้าสำเร็จ: ${report.imported.length}`;
+  $('#reportSuccess').textContent = `สำเร็จ: ${report.imported.length}`;
   $('#reportDuplicates').textContent = `ข้ามไฟล์ซ้ำ: ${report.skippedDuplicates.length}`;
   $('#reportFailed').textContent = `ล้มเหลว: ${report.failed.length}`;
 
   let html = '';
   if (report.imported.length) {
-    html += `<div><b>✓ ไฟล์ที่นำเข้าสำเร็จ:</b><ul>${report.imported.map(x => `<li>${htmlEsc(x.title)} (${htmlEsc(x.filename)})</li>`).join('')}</ul></div>`;
+    html += `<div><b>✓ ไฟล์ที่ติดตั้งสำเร็จ:</b><ul>${report.imported.map(x => `<li>${htmlEsc(x.title)} (${htmlEsc(x.filename)})</li>`).join('')}</ul></div>`;
   }
   if (report.skippedDuplicates.length) {
-    html += `<div><b>⚠ ไฟล์ซ้ำที่ข้าม (SHA-256 ตรงกับที่มีอยู่แล้ว):</b><ul>${report.skippedDuplicates.map(x => `<li>${htmlEsc(x.filename)} → ตรงกับ “${htmlEsc(x.existingTitle)}”</li>`).join('')}</ul></div>`;
+    html += `<div><b>⚠ ไฟล์ซ้ำที่ข้าม (SHA-256 ตรงกัน):</b><ul>${report.skippedDuplicates.map(x => `<li>${htmlEsc(x.filename)} → ตรงกับ “${htmlEsc(x.existingTitle)}”</li>`).join('')}</ul></div>`;
   }
-  if (report.failed.length) {
-    html += `<div><b>✗ ไฟล์ที่ล้มเหลว:</b><ul>${report.failed.map(x => `<li>${htmlEsc(x.filename)}: ${htmlEsc(x.reason)}</li>`).join('')}</ul></div>`;
-  }
-
-  $('#reportDetails').innerHTML = html || 'ไม่มีข้อมูลเพิ่มเติม';
+  $('#reportDetails').innerHTML = html || 'เรียบร้อยสมบูรณ์';
 }
 
-// --- Backup JSON from Cloud ---
-$('#backupJsonBtn').addEventListener('click', () => {
-  const payload = {
-    app: 'MIX-IMAGE HTML Archive — Real-Time Cloud Edition',
-    exportedAt: new Date().toISOString(),
-    totalEntries: entries.length,
-    entries: entries.map(e => ({
-      id: e.id,
-      title: e.title,
-      category: e.categoryName,
-      description: e.description,
-      tags: e.tags,
-      originalFilename: e.originalFilename,
-      htmlDownloadUrl: e.htmlDownloadUrl,
-      fileSize: e.fileSize,
-      contentHash: e.contentHash,
-      notes: e.notes,
-      updatedAt: e.updatedAt
-    }))
-  };
+$('#startSeedBtn')?.addEventListener('click', seedInitialSamples);
+$('#quickSeedChip')?.addEventListener('click', seedInitialSamples);
 
-  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `MIX-IMAGE-Cloud-Backup-${new Date().toISOString().slice(0, 10)}.json`;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 2000);
-  toast('ส่งออกไฟล์สำรอง JSON จากคลาวด์แล้ว');
+$('#tabSeedMigrate')?.addEventListener('click', () => {
+  $('#tabSeedMigrate').classList.add('active');
+  $('#tabHtmlMigrate').classList.remove('active');
+  $('#tabJsonMigrate').classList.remove('active');
+  $('#paneSeedMigrate').hidden = false;
+  $('#paneHtmlMigrate').hidden = true;
+  $('#paneJsonMigrate').hidden = true;
 });
 
-// --- Auth Modal & PIN Login ---
-function openAuthModal() {
-  $('#authWrap').classList.add('show');
-  document.body.style.overflow = 'hidden';
-  $('#pinInput').value = '';
-  setTimeout(() => $('#pinInput')?.focus(), 150);
-}
-
-// Auth Mode Tabs
-$('#tabPinAuth')?.addEventListener('click', () => {
-  $('#tabPinAuth').classList.add('active');
-  $('#tabEmailAuth').classList.remove('active');
-  $('#panePinAuth').hidden = false;
-  $('#paneEmailAuth').hidden = true;
-  $('#pinInput').value = '';
-  $('#pinInput')?.focus();
+$('#tabHtmlMigrate')?.addEventListener('click', () => {
+  $('#tabHtmlMigrate').classList.add('active');
+  $('#tabSeedMigrate').classList.remove('active');
+  $('#tabJsonMigrate').classList.remove('active');
+  $('#paneHtmlMigrate').hidden = false;
+  $('#paneSeedMigrate').hidden = true;
+  $('#paneJsonMigrate').hidden = true;
 });
 
-$('#tabEmailAuth')?.addEventListener('click', () => {
-  $('#tabEmailAuth').classList.add('active');
-  $('#tabPinAuth').classList.remove('active');
-  $('#paneEmailAuth').hidden = false;
-  $('#panePinAuth').hidden = true;
+$('#tabJsonMigrate')?.addEventListener('click', () => {
+  $('#tabJsonMigrate').classList.add('active');
+  $('#tabSeedMigrate').classList.remove('active');
+  $('#tabHtmlMigrate').classList.remove('active');
+  $('#paneJsonMigrate').hidden = false;
+  $('#paneSeedMigrate').hidden = true;
+  $('#paneHtmlMigrate').hidden = true;
 });
 
-// PIN Keypad clicks
-$$('.pin-key[data-digit]').forEach(btn => {
-  btn.addEventListener('click', () => {
-    if ($('#pinInput').value.length < 4) {
-      $('#pinInput').value += btn.dataset.digit;
-      if ($('#pinInput').value.length === 4) {
-        handlePinSubmit();
-      }
-    }
-  });
-});
-
-$('#pinClear')?.addEventListener('click', () => {
-  $('#pinInput').value = '';
-  $('#pinInput')?.focus();
-});
-
-$('#pinBack')?.addEventListener('click', () => {
-  $('#pinInput').value = $('#pinInput').value.slice(0, -1);
-  $('#pinInput')?.focus();
-});
-
-$('#pinInput')?.addEventListener('input', () => {
-  if ($('#pinInput').value.length === 4) {
-    handlePinSubmit();
-  }
-});
-
-$('#pinInput')?.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter') {
-    handlePinSubmit();
-  }
-});
-
-async function handlePinSubmit() {
-  const pin = $('#pinInput').value.trim();
-  if (pin.length !== 4) {
-    toast('กรุณากรอกรหัส PIN 4 หลัก');
+$('#startHtmlMigrateBtn')?.addEventListener('click', async () => {
+  const files = [...($('#batchHtmlInput').files || [])];
+  if (!files.length) {
+    toast('กรุณาเลือกไฟล์ HTML');
     return;
   }
+  $('#migrationProgress').hidden = false;
+  $('#migrationReport').hidden = true;
 
   try {
-    await loginWithPin(pin);
-    closeModal('authWrap');
-    toast('👑 ปลดล็อกสิทธิ์ Admin ด้วย PIN สำเร็จ!');
+    const report = await migrateHtmlFileList(files, null, (p) => {
+      $('#migrationBarFill').style.width = `${p.percent}%`;
+      $('#migrationStatusText').textContent = p.status;
+    });
+    renderMigrationReport(report);
   } catch (err) {
-    $('#pinInput').value = '';
-    $('#pinInput')?.focus();
-    toast(err.message || 'รหัส PIN ไม่ถูกต้อง');
-  }
-}
-
-$('#submitPinBtn')?.addEventListener('click', handlePinSubmit);
-
-$('#authBtn').addEventListener('click', () => {
-  const user = getCurrentUser();
-  const isPin = isPinAuthenticated();
-  if (user || isPin) {
-    if (confirm('ออกจากระบบและล็อคคลังไฟล์ใช่หรือไม่?')) {
-      logoutUser().then(() => toast('ออกจากระบบแล้ว'));
-    }
-  } else {
-    openAuthModal();
+    toast('อัปโหลดล้มเหลว: ' + err.message);
   }
 });
 
-$('#paneEmailAuth')?.addEventListener('submit', async (ev) => {
-  ev.preventDefault();
-  const email = $('#authEmail').value.trim();
-  const password = $('#authPassword').value;
-  try {
-    await loginWithEmail(email, password);
-    closeModal('authWrap');
-    toast('เข้าสู่ระบบสำเร็จ');
-  } catch (err) {
-    toast('เข้าสู่ระบบไม่สำเร็จ: ' + err.message);
-  }
-});
-
-$('#googleLoginBtn').addEventListener('click', async () => {
-  try {
-    await loginWithGoogle();
-    closeModal('authWrap');
-    toast('เข้าสู่ระบบด้วย Google สำเร็จ');
-  } catch (err) {
-    toast('เข้าสู่ระบบไม่สำเร็จ: ' + err.message);
-  }
-});
-
-// --- Config Modal ---
-$('#configNav').addEventListener('click', () => {
-  $('#cfgApiKey').value = firebaseConfig.apiKey || '';
-  $('#cfgProjectId').value = firebaseConfig.projectId || '';
-  $('#cfgAuthDomain').value = firebaseConfig.authDomain || '';
-  $('#cfgStorageBucket').value = firebaseConfig.storageBucket || '';
-  $('#cfgAppId').value = firebaseConfig.appId || '';
-  $('#configWrap').classList.add('show');
-  document.body.style.overflow = 'hidden';
-});
-
-$('#configForm').addEventListener('submit', (ev) => {
-  ev.preventDefault();
-  const newConfig = {
-    apiKey: $('#cfgApiKey').value.trim(),
-    projectId: $('#cfgProjectId').value.trim(),
-    authDomain: $('#cfgAuthDomain').value.trim(),
-    storageBucket: $('#cfgStorageBucket').value.trim(),
-    appId: $('#cfgAppId').value.trim()
-  };
-  saveFirebaseConfig(newConfig);
-});
-
-$('#resetConfigBtn').addEventListener('click', () => {
-  if (confirm('ต้องการคืนค่าคอนฟิกเป็นค่าเริ่มต้นใช่หรือไม่?')) {
-    resetFirebaseConfig();
-  }
-});
-
-// --- Modal Helper Functions ---
+// Modal helpers
 function closeModal(id) {
   const el = $('#' + id);
   if (!el) return;
   el.classList.remove('show');
-  if (!$$('.modal-wrap.show').length) {
-    document.body.style.overflow = '';
-  }
-  if (id === 'previewWrap') {
-    $('#previewFrame').removeAttribute('srcdoc');
-    previewEntry = null;
-  }
+  if (!$$('.modal-wrap.show').length) document.body.style.overflow = '';
 }
 
-$$('[data-close]').forEach(b => {
-  b.addEventListener('click', () => closeModal(b.dataset.close));
+$$('[data-close]').forEach(b => b.addEventListener('click', () => closeModal(b.dataset.close)));
+$$('.modal-wrap').forEach(w => w.addEventListener('click', (e) => { if (e.target === w) closeModal(w.id); }));
+
+$('#addNav')?.addEventListener('click', () => openEditorModal());
+$('#migrationTopBtn')?.addEventListener('click', () => {
+  $('#migrationReport').hidden = true;
+  $('#migrationProgress').hidden = true;
+  $('#migrationWrap').classList.add('show');
+  document.body.style.overflow = 'hidden';
 });
 
-$$('.modal-wrap').forEach(w => {
-  w.addEventListener('click', (e) => {
-    if (e.target === w) closeModal(w.id);
-  });
-});
-
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') {
-    $$('.modal-wrap.show').forEach(w => closeModal(w.id));
-  }
-});
-
-// --- Top Buttons & Toolbar Listeners ---
-$('#addNav').addEventListener('click', () => openEditorModal());
-$('#addTop').addEventListener('click', () => openEditorModal());
-$('#helpBtn').addEventListener('click', () => {
+$('#helpBtn')?.addEventListener('click', () => {
   $('#helpWrap').classList.add('show');
   document.body.style.overflow = 'hidden';
 });
-$('#openNewTab').addEventListener('click', openIsolatedTab);
-$('#downloadPreview').addEventListener('click', () => downloadOriginalFile(previewEntry));
 
-$('#search').addEventListener('input', (e) => {
-  searchTerm = e.target.value.trim();
-  renderGrid();
+$('#copyPromptBtn')?.addEventListener('click', async () => {
+  if (previewEntry?.description) {
+    await navigator.clipboard.writeText(previewEntry.description);
+    toast('📋 คัดลอกพรอมต์ลง Clipboard แล้ว!');
+  }
 });
 
-$('#customCoverFilter').addEventListener('click', () => {
-  onlyCustomCover = !onlyCustomCover;
-  renderGrid();
+$('#openNewTab')?.addEventListener('click', () => {
+  if (!previewEntry) return;
+  const frame = $('#previewFrame');
+  const guardedHtml = frame.srcdoc || '<h1>No Content</h1>';
+  const blob = new Blob([guardedHtml], { type: 'text/html;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  window.open(url, '_blank', 'noopener');
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
 });
 
-$('#sortSelect').addEventListener('change', (e) => {
-  currentSort = e.target.value;
-  renderGrid();
-});
+$('#downloadPreview')?.addEventListener('click', () => downloadOriginalFile(previewEntry));
 
-$$('.nav button[data-view]').forEach(b => {
-  b.addEventListener('click', () => {
-    currentView = b.dataset.view;
-    currentCategory = 'all';
+// Filter Chips
+$$('.fchip[data-filter]').forEach(chip => {
+  chip.addEventListener('click', () => {
+    $$('.fchip[data-filter]').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    activeFilter = chip.dataset.filter;
     render();
   });
 });
 
-// --- Application Bootstrapping ---
-async function bootstrap() {
-  console.info("🚀 MIX-IMAGE HTML Archive — Real-Time Cloud Edition starting...");
+$('#search')?.addEventListener('input', (e) => {
+  searchTerm = e.target.value.trim();
+  renderGrid();
+});
 
-  // 1. Initialize Auth
+$('#sortSelect')?.addEventListener('change', (e) => {
+  currentSort = e.target.value;
+  renderGrid();
+});
+
+// =========================================================================
+// 7. BOOTSTRAP
+// =========================================================================
+async function bootstrap() {
+  console.info("🚀 MIX-IMAGE Prompt & HTML Studio starting...");
+
+  // Initialize PIN gate
+  initPinGate();
+
+  // Initialize Auth
   initAuth();
 
-  subscribeAuth((user, profile) => {
+  subscribeAuth((user) => {
     if (user) {
-      $('#userName').textContent = profile?.displayName || user.email || 'User';
-      $('#userRole').textContent = profile?.role || 'Editor';
-      $('#authBtn').textContent = 'ออกจากระบบ';
-      $('#liveDot').style.background = '#2cbd7b';
-
-      // Subscribe to user favorites
       if (unsubscribeFavorites) unsubscribeFavorites();
       unsubscribeFavorites = subscribeUserFavorites(user.uid, (favSet) => {
         userFavorites = favSet;
         render();
       });
-    } else {
-      $('#userName').textContent = 'ผู้เยี่ยมชม (Guest)';
-      $('#userRole').textContent = 'Viewer (Read-only)';
-      $('#authBtn').textContent = 'เข้าสู่ระบบ';
-      userFavorites = new Set();
-      render();
     }
   });
 
-  // 2. Connect Real-Time Firestore Listener
+  // Connect Real-Time Firestore
   try {
     unsubscribeFirestore = subscribeHtmlFiles(
-      (items, hasPendingWrites, fromCache) => {
-        entries = items;
-        $('#syncBadge').innerHTML = hasPendingWrites
-          ? `<span class="pulse-dot" style="background:#ff9a24"></span> กำลังบันทึก...`
-          : `<span class="pulse-dot"></span> Real-time Active`;
+      (items, hasPendingWrites) => {
+        if (items && items.length > 0) {
+          entries = items;
+        } else {
+          // Pre-populate with bundled seed samples so 2:3 cards appear immediately
+          entries = SEED_SAMPLES.map((s, idx) => ({
+            id: 'seed-' + (idx + 1),
+            title: s.title,
+            originalFilename: s.fileName,
+            categoryName: s.categoryName || s.category,
+            categoryId: s.categoryId || 'portrait',
+            modelTag: s.modelTag || 'GPT-Image 2.5',
+            tags: s.tags || ['GPT-Image 2.5'],
+            description: s.notes,
+            notes: s.notes,
+            body: s.body,
+            coverType: s.coverType || 'auto',
+            fileSize: s.body ? s.body.length : 12400,
+            updatedAt: new Date().toISOString()
+          }));
+        }
+        $('#statSync').textContent = hasPendingWrites ? 'กำลังซิงก์...' : 'พร้อม';
         render();
       },
       (err) => {
-        console.error("Firestore subscription error:", err);
-        $('#syncBadge').innerHTML = `<span class="pulse-dot" style="background:#f35f7d"></span> ออฟไลน์ / การเชื่อมต่อขัดข้อง`;
-        toast('การเชื่อมต่อ Firestore ขัดข้อง: ' + err.message);
+        console.warn("Firestore listener:", err.message);
+        $('#statSync').textContent = 'ออฟไลน์';
+        if (!entries.length) {
+          entries = SEED_SAMPLES.map((s, idx) => ({
+            id: 'seed-' + (idx + 1),
+            title: s.title,
+            originalFilename: s.fileName,
+            categoryName: s.categoryName || s.category,
+            categoryId: s.categoryId || 'portrait',
+            modelTag: s.modelTag || 'GPT-Image 2.5',
+            tags: s.tags || ['GPT-Image 2.5'],
+            description: s.notes,
+            notes: s.notes,
+            body: s.body,
+            coverType: s.coverType || 'auto',
+            fileSize: s.body ? s.body.length : 12400,
+            updatedAt: new Date().toISOString()
+          }));
+          render();
+        }
       }
     );
   } catch (err) {
-    console.error("Could not subscribe to Firestore:", err);
+    console.error("Bootstrap error:", err);
   }
 }
 
