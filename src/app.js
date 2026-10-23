@@ -125,18 +125,7 @@ function initPinGate() {
   });
 
   $('#gateClear')?.addEventListener('click', clearPinBuffer);
-
-  // Biometric / Backspace key
-  $('#gateBack')?.addEventListener('click', () => {
-    if (currentPinBuffer.length > 0) {
-      backspacePinBuffer();
-    } else {
-      // Touch ID / Quick biometric tap for owner
-      currentPinBuffer = MASTER_PIN;
-      updatePinDots();
-      setTimeout(verifyPinAttempt, 100);
-    }
-  });
+  $('#gateBack')?.addEventListener('click', backspacePinBuffer);
 
   // Hidden hardware keyboard capture
   const hiddenInput = $('#gatePinInput');
@@ -219,7 +208,7 @@ function updatePinDots() {
 async function verifyPinAttempt() {
   if (currentPinBuffer === MASTER_PIN) {
     $('#lockScreen').classList.add('unlocked');
-    toast('👑 ยินดีต้อนรับลูกพี่! ปลดล็อกคลังเรียบร้อย (1449)');
+    toast('👑 ยินดีต้อนรับลูกพี่! ปลดล็อกคลังเรียบร้อย');
     try {
       await loginWithPin(MASTER_PIN);
     } catch (_) {}
@@ -231,7 +220,7 @@ async function verifyPinAttempt() {
       pinBox.classList.add('shake-error');
       setTimeout(() => pinBox.classList.remove('shake-error'), 400);
     }
-    toast('❌ รหัส PIN ไม่ถูกต้อง (ใส่ 1449)');
+    toast('❌ รหัส PIN ไม่ถูกต้อง โปรดลองใหม่อีกครั้ง');
     clearPinBuffer();
   }
 }
